@@ -98,10 +98,12 @@ export const useHistoryStore = defineStore("history", () => {
     return entry;
   }
 
-  /** Undoes an action. Resolves to true only if it was fully undone. */
+  /** Undoes (or retries undoing) an action. True only if it was fully undone. */
   async function undo(entryId: string): Promise<boolean> {
     const entry = entries.value.find((candidate) => candidate.id === entryId);
-    if (entry?.status !== "done") {
+    // A failed undo (for example offline) may be retried; a conflict may not,
+    // because the issue has changed since and undoing would clobber that.
+    if (!(entry && (entry.status === "done" || entry.status === "failed"))) {
       return false;
     }
     const client = useSessionStore().requireClient();

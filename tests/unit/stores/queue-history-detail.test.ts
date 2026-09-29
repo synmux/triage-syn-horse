@@ -348,6 +348,30 @@ describe("history store", () => {
     await expect(useHistoryStore().undo(entry.id)).resolves.toBe(false);
   });
 
+  it("lets a failed undo be retried, but never a conflicting one", async () => {
+    let failNext = true;
+    const { entry } = await acceptAndGetEntry(() => {
+      if (failNext) {
+        failNext = false;
+        return Promise.reject(new TypeError("Load failed"));
+      }
+      return {
+        issue: {
+          id: "issue-2",
+          identifier: "MYR-2",
+          snoozedUntilAt: null,
+          state: { id: "myr-backlog", name: "Backlog", type: "backlog" },
+        },
+      };
+    });
+
+    await expect(useHistoryStore().undo(entry.id)).resolves.toBe(false);
+    expect(useHistoryStore().entries[0]?.status).toBe("failed");
+
+    await expect(useHistoryStore().undo(entry.id)).resolves.toBe(true);
+    expect(useHistoryStore().entries[0]?.status).toBe("undone");
+  });
+
   it("persists entries, newest first, capped at fifty", async () => {
     stubLinearFetch(baseHandlers);
     await useSessionStore().connect("lin_api_good");
