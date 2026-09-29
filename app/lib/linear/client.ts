@@ -61,8 +61,10 @@ class RequestTimeoutError extends Error {
 }
 
 export function createLinearClient(options: LinearClientOptions): LinearClient {
-  const fetchImplementation =
-    options.fetch ?? globalThis.fetch.bind(globalThis);
+  // Resolve the global fetch per request rather than capturing it now, so a
+  // long-lived client always uses the current implementation.
+  const fetchImplementation: typeof globalThis.fetch =
+    options.fetch ?? ((input, init) => globalThis.fetch(input, init));
   const endpoint = options.endpoint ?? linearGraphqlEndpoint;
   const timeoutMs = options.timeoutMs ?? defaultTimeoutMs;
 
