@@ -8,7 +8,8 @@ export type ToastTone = "info" | "success" | "warning" | "error";
 
 export interface ToastAction {
   label: string;
-  run: () => void | Promise<void>;
+  /** The toast ignores the result; failures must be reported by the action. */
+  run: () => unknown;
 }
 
 export interface Toast {
