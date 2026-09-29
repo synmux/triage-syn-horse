@@ -39,6 +39,11 @@ export interface HistoryEntry {
   status: HistoryStatus;
   summary: string;
   undo: UndoPlan;
+  /**
+   * Undo steps already completed by an earlier attempt that stopped
+   * part-way. A retry resumes after them. Missing on older entries.
+   */
+  undoneSteps?: number;
 }
 
 const maxEntries = 50;
@@ -57,10 +62,17 @@ const newId = () =>
 
 export const useHistoryStore = defineStore("history", () => {
   const toasts = useToastStore();
-  // An entry interrupted mid-undo (app closed) can be retried.
+  // An undo interrupted by closing the app is offered again as a retry,
+  // resuming after whichever steps it had completed.
   const entries = ref<HistoryEntry[]>(
     (historyStorage.read() ?? []).map((entry) =>
-      entry.status === "undoing" ? { ...entry, status: "done" } : entry
+      entry.status === "undoing"
+        ? {
+            ...entry,
+            message: "The undo was interrupted. Try it again to finish it.",
+            status: "failed",
+          }
+        : entry
     )
   );
 
@@ -115,11 +127,20 @@ export const useHistoryStore = defineStore("history", () => {
     }
     const client = session.requireClient();
     const startedIn = session.epoch;
+    const resumeFrom = entry.undoneSteps ?? 0;
     update(entryId, { message: null, status: "undoing" });
     try {
       await issueWriteQueue.run(entry.issueId, async () => {
-        await verifyUndoPreconditions(client, entry.undo);
-        await executeUndo(client, entry.undo);
+        // A resumed undo has already changed the issue, so the original
+        // precondition no longer holds; it was checked on the first attempt.
+        if (resumeFrom === 0) {
+          await verifyUndoPreconditions(client, entry.undo);
+        }
+        await executeUndo(client, entry.undo, {
+          onStepDone: (completedSteps) =>
+            update(entryId, { undoneSteps: completedSteps }),
+          startAt: resumeFrom,
+        });
       });
       if (!session.isCurrent(startedIn)) {
         return false;

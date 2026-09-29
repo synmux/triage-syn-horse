@@ -208,3 +208,55 @@ describe("disconnecting", () => {
     expect(localStorage.length).toBe(0);
   });
 });
+
+describe("an undo that stops part-way", () => {
+  it("resumes from the step it reached, without re-checking the issue", async () => {
+    let deleteAttempts = 0;
+    const { queue, requests } = await connectAndLoad({
+      CreateComment: () => ({
+        commentCreate: { comment: { id: "comment-9" }, success: true },
+      }),
+      DeleteComment: () => {
+        deleteAttempts += 1;
+        if (deleteAttempts === 1) {
+          return Promise.reject(new TypeError("Load failed"));
+        }
+        return { commentDelete: { success: true } };
+      },
+      IssueState: () => ({
+        issue: {
+          id: "issue-2",
+          identifier: "MYR-2",
+          snoozedUntilAt: null,
+          state: { id: "myr-backlog", name: "Backlog", type: "backlog" },
+        },
+      }),
+      UpdateIssue: () => updated(second, { state: { id: "myr-backlog" } }),
+    });
+    await queue.perform(
+      planAccept(second, myr, myrStates, { comment: "Doing it." })
+    );
+    const history = useHistoryStore();
+    const [entry] = history.entries;
+    if (!entry) {
+      throw new Error("No history entry");
+    }
+
+    await expect(history.undo(entry.id)).resolves.toBe(false);
+    expect(history.entries[0]).toMatchObject({
+      status: "failed",
+      undoneSteps: 1,
+    });
+
+    const before = requests.length;
+    await expect(history.undo(entry.id)).resolves.toBe(true);
+
+    expect(requests.slice(before).map((request) => request.operation)).toEqual(
+      expect.arrayContaining(["DeleteComment"])
+    );
+    expect(
+      requests.slice(before).map((request) => request.operation)
+    ).not.toContain("IssueState");
+    expect(history.entries[0]?.status).toBe("undone");
+  });
+});

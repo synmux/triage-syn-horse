@@ -7,7 +7,11 @@
  * they can be stored and replayed later from the Recent screen.
  */
 import type { LinearClient } from "../linear/client";
-import { describeError } from "../linear/errors";
+import {
+  describeError,
+  LinearGraphQLError,
+  LinearNetworkError,
+} from "../linear/errors";
 import {
   CreateCommentDocument,
   CreateIssueRelationDocument,
@@ -71,6 +75,27 @@ export class UndoConflictError extends Error {
 
 export class UndoFailedError extends Error {
   override name = "UndoFailedError";
+  /** Undo steps that did complete; a retry resumes after them. */
+  readonly completedSteps: number;
+
+  constructor(
+    message: string,
+    options: { cause: unknown; completedSteps: number }
+  ) {
+    super(message, { cause: options.cause });
+    this.completedSteps = options.completedSteps;
+  }
+}
+
+const notFoundPattern = /not found|could not find/i;
+
+/** Whether Linear says the thing a delete targets no longer exists. */
+function isAlreadyGone(error: unknown): boolean {
+  return (
+    error instanceof LinearGraphQLError &&
+    (notFoundPattern.test(error.message) ||
+      notFoundPattern.test(error.userMessage ?? ""))
+  );
 }
 
 const failureLeads: Record<ActionKind, (identifier: string) => string> = {
@@ -198,6 +223,57 @@ async function runUndoStep(
   }
 }
 
+/**
+ * After a state or snooze change failed on the network (for example a
+ * timeout), asks Linear whether it landed anyway. Anything else, or a
+ * failed check, counts as not landed.
+ */
+async function landedAnyway(
+  client: LinearClient,
+  step: Extract<PlannedStep, { kind: "updateIssue" }>
+): Promise<boolean> {
+  const { snoozedUntilAt, stateId } = step.input;
+  if (stateId === undefined && snoozedUntilAt === undefined) {
+    return false;
+  }
+  try {
+    const { issue } = await client.request(IssueStateDocument, {
+      id: step.issueId,
+    });
+    const stateMatches = stateId === undefined || issue.state.id === stateId;
+    const snoozeMatches =
+      snoozedUntilAt === undefined ||
+      sameInstant(issue.snoozedUntilAt, snoozedUntilAt ?? null);
+    return stateMatches && snoozeMatches;
+  } catch {
+    // The check itself failed: assume the change did not land.
+    return false;
+  }
+}
+
+/** Runs a step; a lost answer to a change that did land counts as success. */
+async function runStepCheckingLostAnswers(
+  client: LinearClient,
+  step: PlannedStep
+): Promise<StepOutcome> {
+  try {
+    return await runPlannedStep(client, step);
+  } catch (error) {
+    if (
+      error instanceof LinearNetworkError &&
+      step.kind === "updateIssue" &&
+      (await landedAnyway(client, step))
+    ) {
+      return {
+        inverses: [
+          { input: step.revert, issueId: step.issueId, kind: "updateIssue" },
+        ],
+      };
+    }
+    throw error;
+  }
+}
+
 /** Reverses applied steps; returns a description of each one that failed. */
 async function rollBack(
   client: LinearClient,
@@ -210,9 +286,11 @@ async function rollBack(
       // biome-ignore lint/performance/noAwaitInLoops: sequential by design.
       await runUndoStep(client, step);
     } catch (error) {
-      failures.push(
-        `${undoStepDescriptions[step.kind]}: ${describeError(error)}`
-      );
+      if (!(step.kind !== "updateIssue" && isAlreadyGone(error))) {
+        failures.push(
+          `${undoStepDescriptions[step.kind]}: ${describeError(error)}`
+        );
+      }
     }
   }
   return failures;
@@ -231,7 +309,7 @@ export async function executePlan(
     try {
       // Each step depends on the previous one having succeeded.
       // biome-ignore lint/performance/noAwaitInLoops: sequential by design.
-      const outcome = await runPlannedStep(client, step);
+      const outcome = await runStepCheckingLostAnswers(client, step);
       const { inverses, issue: returnedIssue, relationState } = outcome;
       undoStack.push(...inverses);
       if (returnedIssue !== undefined) {
@@ -303,21 +381,41 @@ export async function verifyUndoPreconditions(
 }
 
 /** Runs an undo plan's steps in order. Call verifyUndoPreconditions first. */
+export interface UndoProgress {
+  /** Called after each completed step with the number completed so far. */
+  onStepDone?: (completedSteps: number) => void;
+  /** Skip steps already completed by an earlier, interrupted attempt. */
+  startAt?: number;
+}
+
+/**
+ * Runs an undo plan's steps in order, from `startAt`. A delete whose
+ * target is already gone counts as done. Call verifyUndoPreconditions
+ * first unless resuming.
+ */
 export async function executeUndo(
   client: LinearClient,
-  undo: UndoPlan
+  undo: UndoPlan,
+  progress: UndoProgress = {}
 ): Promise<void> {
+  const startAt = progress.startAt ?? 0;
   for (const [index, step] of undo.steps.entries()) {
+    if (index < startAt) {
+      continue;
+    }
     try {
       // Undo steps must land in order, like the action's own steps.
       // biome-ignore lint/performance/noAwaitInLoops: sequential by design.
       await runUndoStep(client, step);
     } catch (error) {
-      const partly = index > 0 ? "partly undone" : "not undone";
-      throw new UndoFailedError(
-        `${undo.identifier} was ${partly}: ${describeError(error)}`,
-        { cause: error }
-      );
+      if (!(step.kind !== "updateIssue" && isAlreadyGone(error))) {
+        const partly = index > 0 ? "partly undone" : "not undone";
+        throw new UndoFailedError(
+          `${undo.identifier} was ${partly}: ${describeError(error)}`,
+          { cause: error, completedSteps: index }
+        );
+      }
     }
+    progress.onStepDone?.(index + 1);
   }
 }

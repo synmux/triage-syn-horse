@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LinearGraphQLError } from "~/lib/linear/errors";
+import { LinearGraphQLError, LinearNetworkError } from "~/lib/linear/errors";
 import {
   planAccept,
   planDecline,
@@ -12,6 +12,7 @@ import {
   executePlan,
   executeUndo,
   UndoConflictError,
+  UndoFailedError,
   verifyUndoPreconditions,
 } from "~/lib/triage/executor";
 import { statesForTeam } from "~/lib/triage/states";
@@ -419,6 +420,125 @@ describe("undo", () => {
     expect(calls.map((call) => [call.operation, call.variables])).toEqual([
       ["UpdateIssue", { id: "issue-1", input: { stateId: "myr-triage" } }],
       ["DeleteComment", { id: "comment-1" }],
+    ]);
+  });
+});
+
+describe("undo that stops part-way", () => {
+  const undo = {
+    expectation: { stateId: "myr-backlog" },
+    identifier: "MYR-1",
+    issueId: "issue-1",
+    steps: [
+      {
+        input: { stateId: "myr-triage" },
+        issueId: "issue-1",
+        kind: "updateIssue" as const,
+      },
+      { commentId: "comment-1", kind: "deleteComment" as const },
+    ],
+  };
+
+  it("reports how many steps completed and resumes from there", async () => {
+    const completed: number[] = [];
+    const failing = createFakeClient({
+      DeleteComment: () => {
+        throw new LinearNetworkError("offline");
+      },
+      UpdateIssue: updateIssueOk,
+    });
+
+    const error = await executeUndo(failing.client, undo, {
+      onStepDone: (count) => completed.push(count),
+    }).catch((failure: unknown) => failure);
+
+    expect(error).toBeInstanceOf(UndoFailedError);
+    expect((error as UndoFailedError).completedSteps).toBe(1);
+    expect(completed).toEqual([1]);
+
+    const resumed = createFakeClient({ DeleteComment: deleteOk });
+    await executeUndo(resumed.client, undo, { startAt: 1 });
+    expect(resumed.calls.map((call) => call.operation)).toEqual([
+      "DeleteComment",
+    ]);
+  });
+
+  it("treats deleting something already gone as done", async () => {
+    const { client } = createFakeClient({
+      DeleteComment: () => {
+        throw new LinearGraphQLError("Entity not found: Comment", {
+          code: "INPUT_ERROR",
+          userMessage: "Could not find referenced Comment.",
+        });
+      },
+      UpdateIssue: updateIssueOk,
+    });
+
+    await expect(executeUndo(client, undo)).resolves.toBeUndefined();
+  });
+});
+
+describe("a state change whose answer is lost", () => {
+  const timeout = () => {
+    throw new LinearNetworkError("Linear took too long to respond");
+  };
+
+  it("checks Linear and carries on when the change did land", async () => {
+    const plan = planDecline(issue, team, teamStates, { comment: "No." });
+    const { calls, client } = createFakeClient({
+      CreateComment: createCommentOk,
+      IssueState: () => ({
+        issue: {
+          id: "issue-1",
+          identifier: "MYR-1",
+          snoozedUntilAt: null,
+          state: { id: "myr-canceled", name: "Canceled", type: "canceled" },
+        },
+      }),
+      UpdateIssue: timeout,
+    });
+
+    const result = await executePlan(client, plan);
+
+    expect(calls.map((call) => call.operation)).toEqual([
+      "CreateComment",
+      "UpdateIssue",
+      "IssueState",
+    ]);
+    expect(result.undo.steps).toEqual([
+      {
+        input: { stateId: "myr-triage" },
+        issueId: "issue-1",
+        kind: "updateIssue",
+      },
+      { commentId: "comment-1", kind: "deleteComment" },
+    ]);
+  });
+
+  it("rolls back when Linear shows the change did not land", async () => {
+    const plan = planDecline(issue, team, teamStates, { comment: "No." });
+    const { calls, client } = createFakeClient({
+      CreateComment: createCommentOk,
+      DeleteComment: deleteOk,
+      IssueState: () => ({
+        issue: {
+          id: "issue-1",
+          identifier: "MYR-1",
+          snoozedUntilAt: null,
+          state: { id: "myr-triage", name: "Triage", type: "triage" },
+        },
+      }),
+      UpdateIssue: timeout,
+    });
+
+    await expect(executePlan(client, plan)).rejects.toBeInstanceOf(
+      ActionFailedError
+    );
+    expect(calls.map((call) => call.operation)).toEqual([
+      "CreateComment",
+      "UpdateIssue",
+      "IssueState",
+      "DeleteComment",
     ]);
   });
 });
