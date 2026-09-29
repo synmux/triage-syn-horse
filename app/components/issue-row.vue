@@ -91,7 +91,7 @@
       >
         <AppIcon name="calendar" :size="14" />
         <span class="visually-hidden">{{
-          dueDate.overdue ? "Overdue, was due" : "Due"
+          dueDate.overdue ? "Was due" : "Due"
         }}</span>
         {{ dueDate.label }}
       </span>

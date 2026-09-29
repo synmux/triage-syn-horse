@@ -21,7 +21,7 @@
   }>();
 
   const needs = computed(() =>
-    missing.length === 0 ? null : `Needs ${missing.join(", ")}`
+    missing.length === 0 ? null : `Needs ${missing.join(" and ")}`
   );
   const emit = defineEmits<{
     act: [action: StripAction];

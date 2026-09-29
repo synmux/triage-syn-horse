@@ -348,7 +348,7 @@
         <AppIcon name="calendar" :size="16" />
         <template v-if="issue.dueDate">
           <span class="visually-hidden">{{
-            dueDateOverdue ? "Overdue, was due" : "Due"
+            dueDateOverdue ? "Was due" : "Due"
           }}</span>
           {{ formatDueDate(issue.dueDate, now) }}
         </template>
