@@ -78,7 +78,7 @@
           ▲ static assets (HTML/JS/CSS/icons, _headers)
 ┌─────────┴────────────────────────────┐
 │ Cloudflare Worker (assets only)       │  not_found_handling = single-page-application
-│ linear-triage.<subdomain>.workers.dev │  _headers: CSP (script hashes), no-referrer, noindex
+│ triage-syn-horse.<subdomain>.workers.dev │  _headers: CSP (script hashes), no-referrer, noindex
 └───────────────────────────────────────┘
 ```
 
@@ -218,7 +218,7 @@ Visual language: native-feeling iOS utility. System font stack (SF Pro, SF Mono 
 
 ## 12. Deployment
 
-- `wrangler.jsonc`: name `linear-triage`, assets-only Worker, `assets.directory = .output/public`, `not_found_handling = single-page-application`, `workers_dev = true`, `preview_urls = false`.
+- `wrangler.jsonc`: name `triage-syn-horse`, assets-only Worker, `assets.directory = .output/public`, `not_found_handling = single-page-application`, `workers_dev = true`, `preview_urls = false`.
 - `pnpm run deploy` = codegen check → generate → headers → `wrangler deploy`.
 - Credentials via `CLOUDFLARE_API_TOKEN`/`CLOUDFLARE_ACCOUNT_ID` from syn's environment.
 

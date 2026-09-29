@@ -9,7 +9,7 @@
  */
 
 /** Every key the app writes starts with this, so disconnecting can wipe them all. */
-export const storagePrefix = "linear-triage:";
+export const storagePrefix = "triage-syn-horse:";
 
 export class StorageUnavailableError extends Error {
   override name = "StorageUnavailableError";

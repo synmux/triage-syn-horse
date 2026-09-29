@@ -230,9 +230,9 @@ export const test = base.extend<{ linear: LinearHarness }>({
       const respond = createMutationResponder(harness, shadow);
 
       await context.addInitScript((key) => {
-        if (!localStorage.getItem("linear-triage:api-key")) {
+        if (!localStorage.getItem("triage-syn-horse:api-key")) {
           localStorage.setItem(
-            "linear-triage:api-key",
+            "triage-syn-horse:api-key",
             JSON.stringify({ value: key, version: 1 })
           );
         }

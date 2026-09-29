@@ -8,7 +8,7 @@
 
 **Tech Stack:** Nuxt 4.5, Vue 3.5, Pinia, TypeScript 6.0 (strict), graphql-codegen client-preset (string documents), markdown-it + DOMPurify, @vite-pwa/nuxt, vitest 5 + happy-dom, Playwright, Ultracite (Biome), wrangler 4, Node 24 LTS, pnpm 12.
 
-**Spec:** `docs/superpowers/specs/2026-09-29-linear-triage-design.md`
+**Spec:** `docs/superpowers/specs/2026-09-29-triage-syn-horse-design.md`
 
 ## Global Constraints
 
@@ -132,7 +132,7 @@ Commit `✨ feat(linear): add typed API client with explicit error mapping`.
 ```ts
 export function createStorage<TValue>(key: string, options: { version: number; backend?: Storage;
   validate: (value: unknown) => value is TValue }): { read(): TValue | null; write(value: TValue): void; clear(): void }
-export function clearAppStorage(backend?: Storage): void // removes every key with prefix 'linear-triage:'
+export function clearAppStorage(backend?: Storage): void // removes every key with prefix 'triage-syn-horse:'
 export function createSerialQueue(): { run<T>(key: string, task: () => Promise<T>): Promise<T>; pending(key: string): boolean }
 ```
 
@@ -300,7 +300,7 @@ Commit `✨ feat(ui): add issue triage screen with actions, pickers and comments
 
 - `buildHeadersFile(htmlDocuments: string[])` extracts inline `<script>` bodies, hashes them (SHA-256, base64), and emits `_headers` with CSP (spec §9), `Referrer-Policy`, `X-Content-Type-Options`, `Permissions-Policy`, `X-Robots-Tag`, and `Cache-Control: public, max-age=31536000, immutable` for `/_nuxt/*`. Test: two inline scripts → two hashes; no `unsafe-inline`; external scripts ignored.
 - `postgenerate` runs the script over `.output/public/*.html`.
-- `wrangler.jsonc`: `name: linear-triage`, `compatibility_date: 2026-09-29`, `assets: { directory: ./.output/public, not_found_handling: single-page-application }`, `workers_dev: true`, `preview_urls: false`.
+- `wrangler.jsonc`: `name: triage-syn-horse`, `compatibility_date: 2026-09-29`, `assets: { directory: ./.output/public, not_found_handling: single-page-application }`, `workers_dev: true`, `preview_urls: false`.
 
 Commit `🔒️ feat(deploy): add CSP headers generation and Workers static assets config`.
 

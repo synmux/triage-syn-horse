@@ -1,12 +1,12 @@
 # AGENTS.md
 
-Context for AI agents working on **linear-triage**, an iPhone-first web app for triaging Linear issues. `CLAUDE.md` is a symlink to this file; edit this one.
+Context for AI agents working on **triage-syn-horse**, an iPhone-first web app for triaging Linear issues. `CLAUDE.md` is a symlink to this file; edit this one.
 
 ## What it is
 
 - Nuxt 4 single-page app (`ssr: false`), generated to static files and served by an assets-only Cloudflare Worker.
 - No backend. The browser calls `https://api.linear.app/graphql` directly with a Linear personal API key stored in `localStorage` (Linear allows CORS).
-- Design spec: `docs/superpowers/specs/2026-09-29-linear-triage-design.md`. Implementation plan: `docs/superpowers/plans/2026-09-29-linear-triage.md`.
+- Design spec: `docs/superpowers/specs/2026-09-29-triage-syn-horse-design.md`. Implementation plan: `docs/superpowers/plans/2026-09-29-triage-syn-horse.md`.
 
 ## Hard rules
 

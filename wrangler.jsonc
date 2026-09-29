@@ -1,7 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   // An assets-only Worker: the app is static files; there is no server code.
-  "name": "linear-triage",
+  "name": "triage-syn-horse",
   "compatibility_date": "2026-09-29",
   "assets": {
     "directory": "./.output/public",
