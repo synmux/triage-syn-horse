@@ -48,7 +48,7 @@ The app is a set of static files that an assets-only Cloudflare Worker serves, c
 env CLOUDFLARE_API_TOKEN=$__CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID=$__CLOUDFLARE_ACCOUNT_ID pnpm run deploy
 ```
 
-`pnpm run deploy` runs `pnpm verify`, builds the app, and writes `_headers` with the Content Security Policy and privacy headers. It then deploys to `linear-triage.<your-subdomain>.workers.dev`. For a custom domain such as `triage.syn.as`, add a `routes` entry with `custom_domain: true` to `wrangler.jsonc`.
+`pnpm run deploy` runs `pnpm verify`, builds the app, and writes `_headers` with the Content Security Policy and privacy headers.
 
 ## Develop
 

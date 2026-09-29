@@ -1,0 +1,22 @@
+name: ci
+permissions: read-all
+on:
+  push: null
+  pull_request: null
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/setup@fbda4c85fc2e1e08721cd8763afea8f48d60f024 # v3.0.0
+        # nb: runs `pnpm install` itself, no need for a separate install step
+        with:
+          runtime: node@24
+          cache: true
+      - name: trunk
+        uses: trunk-io/trunk-action@e1234e67a86010d61ddac8d8ebf4b783e2ffd2fa # v2.0.0
+      - name: verify
+        run: pnpm run verify
+      - name: build
+        run: pnpm run build
