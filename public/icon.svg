@@ -1,0 +1,25 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <title>Triage</title>
+  <rect fill="#16202e" height="512" width="512" />
+  <rect fill="#eef1f4" height="304" rx="30" width="240" x="136" y="104" />
+  <circle cx="256" cy="148" fill="#16202e" r="15" />
+  <rect fill="#56637a" height="16" rx="8" width="152" x="176" y="196" />
+  <rect fill="#9fadbf" height="16" rx="8" width="118" x="176" y="230" />
+  <rect fill="#9fadbf" height="16" rx="8" width="84" x="176" y="264" />
+  <g fill="#16202e">
+    <circle cx="160" cy="316" r="5" />
+    <circle cx="182" cy="316" r="5" />
+    <circle cx="204" cy="316" r="5" />
+    <circle cx="226" cy="316" r="5" />
+    <circle cx="248" cy="316" r="5" />
+    <circle cx="270" cy="316" r="5" />
+    <circle cx="292" cy="316" r="5" />
+    <circle cx="314" cy="316" r="5" />
+    <circle cx="336" cy="316" r="5" />
+    <circle cx="358" cy="316" r="5" />
+  </g>
+  <rect fill="#e5484d" height="52" rx="9" width="36" x="156" y="334" />
+  <rect fill="#8b7cf6" height="52" rx="9" width="36" x="198" y="334" />
+  <rect fill="#e8a33d" height="52" rx="9" width="36" x="240" y="334" />
+  <rect fill="#2fbf71" height="52" rx="9" width="74" x="282" y="334" />
+</svg>

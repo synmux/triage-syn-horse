@@ -11,5 +11,16 @@
       "!test-results",
       "!playwright-report"
     ]
-  }
+  },
+  "overrides": [
+    {
+      // Route components are named by Nuxt's file-based routing, not reused.
+      "includes": ["app/pages/**", "app/app.vue", "app/error.vue"],
+      "linter": {
+        "rules": {
+          "style": { "useVueMultiWordComponentNames": "off" }
+        }
+      }
+    }
+  ]
 }

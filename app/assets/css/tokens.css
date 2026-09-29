@@ -1,4 +1,94 @@
-/* Design tokens are defined in Task 12. */
+/*
+ * Design tokens.
+ *
+ * A sorting desk for Linear's Triage: a hued midnight-slate (dark) or
+ * cool slip-paper (light) ground, quiet native typography, and four
+ * outcome colours that belong to the tear-off action strip. Team colours
+ * from Linear appear only as edge stripes.
+ */
 :root {
-  color-scheme: dark light;
+  --font-body:
+    -apple-system, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    sans-serif;
+  --font-display:
+    ui-rounded, "SF Pro Rounded", -apple-system, system-ui, "Segoe UI", Roboto,
+    sans-serif;
+
+  /* Ground and ink: light "slip paper" */
+  --colour-canvas: #eef1f4;
+  --colour-surface: #ffffff;
+  --colour-surface-raised: #f7f9fb;
+  --colour-line: #d7dde5;
+  --colour-ink: #172131;
+  --colour-ink-muted: #56637a;
+  --colour-ink-faint: #8a96a6;
+  --colour-press: rgb(23 33 49 / 0.07);
+  --colour-scrim: rgb(12 18 28 / 0.42);
+  --colour-focus: #3b7cf5;
+
+  /* Outcomes: text colours (on tints) and fills (solid) */
+  --colour-accept: #177a45;
+  --colour-accept-fill: #2fbf71;
+  --colour-accept-on-fill: #052214;
+  --colour-snooze: #8a5705;
+  --colour-snooze-fill: #e8a33d;
+  --colour-decline: #b8232a;
+  --colour-decline-fill: #e5484d;
+  --colour-decline-solid: #c42b33;
+  --colour-duplicate: #4d3fc4;
+  --colour-duplicate-fill: #8b7cf6;
+  --tint-strength: 13%;
+
+  /* Shape and space */
+  --radius-small: 8px;
+  --radius-medium: 14px;
+  --radius-large: 22px;
+  --radius-pill: 999px;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --gutter: max(var(--space-4), env(safe-area-inset-left));
+  --gutter-end: max(var(--space-4), env(safe-area-inset-right));
+  --strip-height: 4.25rem;
+  --touch: 2.75rem;
+
+  /* Motion */
+  --duration-quick: 140ms;
+  --duration-standard: 240ms;
+  --duration-slow: 420ms;
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+
+  --shadow-sheet: 0 -16px 48px rgb(10 16 26 / 0.22);
+  --shadow-toast: 0 10px 30px rgb(10 16 26 / 0.22);
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Ground and ink: "midnight slate" */
+    --colour-canvas: #16202e;
+    --colour-surface: #1c2838;
+    --colour-surface-raised: #233146;
+    --colour-line: #2f3e54;
+    --colour-ink: #e6ecf2;
+    --colour-ink-muted: #9fadbf;
+    --colour-ink-faint: #6f7e93;
+    --colour-press: rgb(230 236 242 / 0.08);
+    --colour-scrim: rgb(4 8 14 / 0.6);
+    --colour-focus: #7fb0ff;
+
+    --colour-accept: #6fdea3;
+    --colour-snooze: #f4c374;
+    --colour-decline: #ff8f93;
+    --colour-duplicate: #b9b0ff;
+    --tint-strength: 18%;
+
+    --shadow-sheet: 0 -16px 48px rgb(0 0 0 / 0.45);
+    --shadow-toast: 0 10px 30px rgb(0 0 0 / 0.45);
+  }
 }

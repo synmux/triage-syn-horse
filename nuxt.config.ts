@@ -1,6 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { defineNuxtConfig } from "nuxt/config";
 
+const canvasDark = "#16202e";
+const canvasLight = "#eef1f4";
+
 export default defineNuxtConfig({
   app: {
     head: {
@@ -23,18 +26,19 @@ export default defineNuxtConfig({
           name: "apple-mobile-web-app-status-bar-style",
         },
         { content: "telephone=no", name: "format-detection" },
-        { content: "dark light", name: "color-scheme" },
+        { content: "light dark", name: "color-scheme" },
         {
-          content: "#0f1012",
+          content: canvasDark,
           media: "(prefers-color-scheme: dark)",
           name: "theme-color",
         },
         {
-          content: "#f6f5f2",
+          content: canvasLight,
           media: "(prefers-color-scheme: light)",
           name: "theme-color",
         },
         { content: "no-referrer", name: "referrer" },
+        { content: "noindex, nofollow", name: "robots" },
       ],
       title: "Triage",
     },
@@ -51,7 +55,38 @@ export default defineNuxtConfig({
   // Every module imports what it uses, so code under app/lib and app/stores
   // runs in vitest without booting Nuxt. Components are still auto-registered.
   imports: { autoImport: false },
-  modules: ["@pinia/nuxt"],
+  modules: ["@pinia/nuxt", "@vite-pwa/nuxt"],
+  pwa: {
+    client: { installPrompt: false },
+    manifest: {
+      background_color: canvasDark,
+      description: "Triage Linear issues from your phone.",
+      display: "standalone",
+      id: "/",
+      lang: "en-GB",
+      name: "Linear Triage",
+      orientation: "portrait",
+      scope: "/",
+      short_name: "Triage",
+      start_url: "/",
+      theme_color: canvasDark,
+    },
+    pwaAssets: {
+      config: true,
+      // Theme colours are set per colour scheme in app.head above.
+      injectThemeColor: false,
+      overrideManifestIcons: true,
+    },
+    registerType: "autoUpdate",
+    workbox: {
+      cleanupOutdatedCaches: true,
+      globPatterns: ["**/*.{js,css,html,svg,png,ico,webmanifest}"],
+      navigateFallback: "/",
+      // Linear API traffic is never cached: it carries the API key.
+      runtimeCaching: [],
+    },
+  },
+  spaLoadingTemplate: true,
   ssr: false,
   typescript: {
     strict: true,

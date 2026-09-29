@@ -17,6 +17,7 @@ Context for AI agents working on **linear-triage**, an iPhone-first web app for 
 - Keep logic in `app/lib/**` pure and unit-tested; stores are glue; components are presentational.
 - `v-html` is allowed only in `MarkdownView.vue`, and only with `renderMarkdown()` output.
 - UK English everywhere. Descriptive names; no single-letter identifiers, including loop variables.
+- File names are kebab-case (Ultracite rule). Nuxt registers `components/empty-state.vue` as `<EmptyState>`.
 - Fail explicitly: typed errors from `app/lib/linear/errors.ts`, surfaced as toasts. No silent catches.
 
 ## Commands
