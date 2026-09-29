@@ -265,7 +265,7 @@ Verification: `pnpm generate` produces `manifest.webmanifest`, `sw.js`, icons; v
 
 **Files:** `app/pages/connect.vue`, `app/pages/settings.vue`.
 
-Connect: explainer, link to `https://linear.app/settings/account/security`, key input (`autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"`, 16 px), Paste button (`navigator.clipboard.readText`, hidden when unsupported), Connect button with loading state, error text from `LinearAuthError`, standalone-storage note. Settings: account card, preferences toggles, rate-limit snapshot, Disconnect (confirm). Commit `✨ feat(ui): add connect and settings screens`.
+Connect: explainer, link to `https://linear.app/settings/account/security`, key input (`autocomplete="off"`, `autocapitalize="off"`, `spellcheck="false"`, 16 px), Paste button (`navigator.clipboard.readText`, hidden when unsupported), Connect button with loading state, error text from `LinearAuthError`, standalone-storage note. Settings: account card, preferences toggles, Disconnect (confirm). (Rate-limit headers are not CORS-exposed, so no quota display.) Commit `✨ feat(ui): add connect and settings screens`.
 
 ### Task 14: Queue screen
 

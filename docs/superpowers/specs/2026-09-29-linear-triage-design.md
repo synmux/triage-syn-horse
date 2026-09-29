@@ -25,7 +25,8 @@
 | --- | --- |
 | `api.linear.app/graphql` allows CORS from any origin, including `authorization`, `content-type`, `public-file-urls-expire-in` headers | OPTIONS preflight → 204 with matching `access-control-*` headers |
 | Personal key auth uses the raw key in `Authorization` (no `Bearer`) | `viewer` query succeeded |
-| Rate limits: 2,500 requests/hour, 3,000,000 complexity points | `x-ratelimit-*` response headers |
+| Rate limits: 2,500 requests/hour, 3,000,000 complexity points. CORS does **not** expose the `x-ratelimit-*` headers to browsers (only `Retry-After`), so the app cannot show remaining quota | `x-ratelimit-*` response headers; `access-control-expose-headers` |
+| Error shapes: bad key → HTTP 401 `AUTHENTICATION_ERROR`; missing entity → HTTP 200 with `data: null` and `INPUT_ERROR` + `userPresentableMessage`; `Bearer ` prefix → HTTP 400 `INPUT_ERROR` | Probed with invalid inputs |
 | `uploads.linear.app` files need auth; header `public-file-urls-expire-in: <seconds>` makes the API return `?signature=` URLs fetchable without auth | plain URL → 401, signed URL → 200 |
 | Marking as duplicate = `issueRelationCreate(type: duplicate)`; Linear then moves the issue into the reserved, system-managed **Duplicate** state | Linear docs "Issue relations", "Issue status"; `Team.markedAsDuplicateWorkflowState` deprecated "Duplicates are now system-managed" |
 | Snooze = `issueUpdate(input: { snoozedUntilAt })`; snoozed issues stay in the triage state | Schema docstring: "The time until which the issue will be snoozed in Triage view" |
@@ -177,7 +178,7 @@ Visual language: native-feeling iOS utility. System font stack (SF Pro, SF Mono 
 2. **Queue** (`/`) — large-title nav "Triage" with count; team filter chips with counts; rows (identifier, team colour, two-line title, source/creator, age, priority, estimate, labels); swipe right = accept, swipe left = decline (or snooze, per preference); pull to refresh; "Snoozed (n)" toggle; header buttons for Recent and Settings; empty state "Triage is clear".
 3. **Issue** (`/issue/:id`) — nav bar with back, position "3 of 39", previous/next, overflow (Open in Linear, Copy link); team and identifier; title (tap to edit); horizontally scrolling property bar (Priority, Estimate, Labels, Project, Assignee, Team); created-by line; description; attachments; relations; comments with an "Add comment" button; sticky bottom action bar: **Decline · Duplicate · Snooze · Accept** (Accept primary; its chevron opens state choice + comment). After an action it auto-advances to the next issue (preference) or returns to the queue.
 4. **Recent** (`/recent`) — action history with Undo per entry.
-5. **Settings** (`/settings`) — account, preferences, rate-limit status, disconnect.
+5. **Settings** (`/settings`) — account, preferences, disconnect.
 
 ### Interaction safety
 
