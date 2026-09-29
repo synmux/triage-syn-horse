@@ -43,6 +43,14 @@ export const useSessionStore = defineStore("session", () => {
   const status = ref<SessionStatus>(
     apiKey.value ? "connected" : "disconnected"
   );
+  /**
+   * Changes on every connect and disconnect. Stores capture it when a
+   * request starts and drop the answer if it changed, so nothing from a
+   * previous session lands in memory or storage after a disconnect.
+   */
+  const epoch = ref(0);
+  const isCurrent = (capturedEpoch: number) =>
+    capturedEpoch === epoch.value && status.value !== "disconnected";
 
   const watchForAuthFailure = (inner: LinearClient): LinearClient => ({
     request: async (document, variables, options) => {
@@ -81,6 +89,7 @@ export const useSessionStore = defineStore("session", () => {
     };
     keyStorage.write(key);
     accountStorage.write(verified);
+    epoch.value += 1;
     apiKey.value = key;
     account.value = verified;
     status.value = "connected";
@@ -88,13 +97,18 @@ export const useSessionStore = defineStore("session", () => {
 
   /** Refreshes who the saved key belongs to (names and avatars change). */
   async function refreshAccount(): Promise<void> {
+    const startedIn = epoch.value;
     const data = await requireClient().request(ViewerDocument, {});
+    if (!isCurrent(startedIn)) {
+      return;
+    }
     account.value = { organisation: data.organization, viewer: data.viewer };
     accountStorage.write(account.value);
   }
 
   /** Forgets the key and every cached byte the app has stored. */
   function disconnect(): void {
+    epoch.value += 1;
     clearAppStorage();
     apiKey.value = null;
     account.value = null;
@@ -107,6 +121,8 @@ export const useSessionStore = defineStore("session", () => {
     account,
     connect,
     disconnect,
+    epoch,
+    isCurrent,
     refreshAccount,
     requireClient,
     status,

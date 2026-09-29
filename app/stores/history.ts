@@ -4,7 +4,7 @@
  * if the issue has changed since the action.
  */
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { describeError } from "~/lib/linear/errors";
 import { createStorage } from "~/lib/storage";
 import type { ActionKind, ActionPlan } from "~/lib/triage/actions";
@@ -14,6 +14,7 @@ import {
   type UndoPlan,
   verifyUndoPreconditions,
 } from "~/lib/triage/executor";
+import { useDetailStore } from "./detail";
 import { useQueueStore } from "./queue";
 import { useSessionStore } from "./session";
 import { useToastStore } from "./toasts";
@@ -63,7 +64,13 @@ export const useHistoryStore = defineStore("history", () => {
     )
   );
 
+  const session = useSessionStore();
+
   const persist = () => {
+    // Disconnecting wipes storage; nothing may write it back afterwards.
+    if (session.status === "disconnected") {
+      return;
+    }
     try {
       historyStorage.write(entries.value);
     } catch {
@@ -106,13 +113,18 @@ export const useHistoryStore = defineStore("history", () => {
     if (!(entry && (entry.status === "done" || entry.status === "failed"))) {
       return false;
     }
-    const client = useSessionStore().requireClient();
+    const client = session.requireClient();
+    const startedIn = session.epoch;
     update(entryId, { message: null, status: "undoing" });
     try {
       await issueWriteQueue.run(entry.issueId, async () => {
         await verifyUndoPreconditions(client, entry.undo);
         await executeUndo(client, entry.undo);
       });
+      if (!session.isCurrent(startedIn)) {
+        return false;
+      }
+      useDetailStore().invalidate(entry.issueId);
       update(entryId, { status: "undone" });
       toasts.push({ message: `Undone: ${entry.summary}`, tone: "info" });
       useQueueStore()
@@ -134,6 +146,16 @@ export const useHistoryStore = defineStore("history", () => {
     entries.value = [];
     persist();
   }
+
+  // Another account's actions must never be undoable under a new key.
+  watch(
+    () => session.status,
+    (status) => {
+      if (status === "disconnected") {
+        entries.value = [];
+      }
+    }
+  );
 
   return { clear, entries, record, undo };
 });

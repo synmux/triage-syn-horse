@@ -79,8 +79,14 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       return inFlight;
     }
     loading.value = true;
+    const startedIn = session.epoch;
     inFlight = fetchSnapshot()
       .then((fresh) => {
+        // Dropped if the session changed while loading (for example a
+        // disconnect), so nothing lands in memory or storage afterwards.
+        if (!session.isCurrent(startedIn)) {
+          return;
+        }
         snapshot.value = fresh;
         stale.value = false;
         error.value = null;
@@ -94,7 +100,9 @@ export const useWorkspaceStore = defineStore("workspace", () => {
         }
       })
       .catch((failure: unknown) => {
-        error.value = describeError(failure);
+        if (session.isCurrent(startedIn)) {
+          error.value = describeError(failure);
+        }
         throw failure;
       })
       .finally(() => {

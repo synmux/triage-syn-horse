@@ -19,6 +19,7 @@ import {
   MutationNotConfirmedError,
 } from "~/lib/triage/executor";
 import { countsByTeam, type QueueView, visibleQueue } from "~/lib/triage/queue";
+import { useDetailStore } from "./detail";
 import { useHistoryStore } from "./history";
 import { usePreferencesStore } from "./preferences";
 import { useSessionStore } from "./session";
@@ -34,6 +35,9 @@ const queueStorage = createStorage<TriageIssue[]>("queue", {
   version: 1,
 });
 
+const sameValue = (first: unknown, second: unknown) =>
+  first === second || JSON.stringify(first) === JSON.stringify(second);
+
 export const useQueueStore = defineStore("queue", () => {
   const session = useSessionStore();
   const preferences = usePreferencesStore();
@@ -46,13 +50,24 @@ export const useQueueStore = defineStore("queue", () => {
   const now = ref(new Date());
   const teamFilter = ref<string | null>(null);
   const view = ref<QueueView>("active");
-  /** Issues with a write in flight: rows lock and refreshes keep them hidden. */
+  /** Issues with a write in flight: rows lock while it runs. */
   const pending = reactive(new Set<string>());
-  /** Issues optimistically removed whose removal Linear has not confirmed yet. */
-  const hidden = new Set<string>();
+  /**
+   * Issues removed by an action. `null` while the action runs; afterwards
+   * the number of the last refresh that started before it finished. Any
+   * refresh up to that number may predate the change, so it cannot bring
+   * the issue back; the first refresh started later settles it.
+   */
+  const hidden = new Map<string, number | null>();
+  /** The last version of each issue that Linear itself returned. */
+  const confirmed = new Map<string, TriageIssue>();
+  let refreshesStarted = 0;
   let inFlight: Promise<void> | null = null;
 
   const persist = () => {
+    if (session.status === "disconnected") {
+      return;
+    }
     try {
       queueStorage.write(issues.value);
     } catch {
@@ -84,24 +99,55 @@ export const useQueueStore = defineStore("queue", () => {
     now.value = new Date();
   }
 
+  const hiddenFrom = (issueId: string, refreshNumber: number) => {
+    if (!hidden.has(issueId)) {
+      return false;
+    }
+    const settledAfter = hidden.get(issueId);
+    return settledAfter === null || settledAfter === undefined
+      ? true
+      : refreshNumber <= settledAfter;
+  };
+
+  function applyRefresh(fetched: TriageIssue[], refreshNumber: number) {
+    for (const issue of fetched) {
+      confirmed.set(issue.id, issue);
+    }
+    issues.value = fetched.filter(
+      (issue) => !hiddenFrom(issue.id, refreshNumber)
+    );
+    for (const [issueId, settledAfter] of hidden) {
+      if (settledAfter !== null && refreshNumber > settledAfter) {
+        hidden.delete(issueId);
+      }
+    }
+    loadedAt.value = new Date();
+    error.value = null;
+    tick();
+    persist();
+  }
+
   function refresh(): Promise<void> {
     if (inFlight) {
       return inFlight;
     }
     const client = session.requireClient();
+    const startedIn = session.epoch;
+    refreshesStarted += 1;
+    const refreshNumber = refreshesStarted;
     loading.value = true;
     const fetchPage = async (after: string | null) =>
       (await client.request(TriageQueueDocument, { after })).issues;
     inFlight = collectPages(fetchPage)
       .then((fetched) => {
-        issues.value = fetched.filter((issue) => !hidden.has(issue.id));
-        loadedAt.value = new Date();
-        error.value = null;
-        tick();
-        persist();
+        if (session.isCurrent(startedIn)) {
+          applyRefresh(fetched, refreshNumber);
+        }
       })
       .catch((failure: unknown) => {
-        error.value = describeError(failure);
+        if (session.isCurrent(startedIn)) {
+          error.value = describeError(failure);
+        }
         throw failure;
       })
       .finally(() => {
@@ -130,14 +176,10 @@ export const useQueueStore = defineStore("queue", () => {
     issues.value = copy;
   };
 
-  /**
-   * Runs a triage action optimistically. Resolves to true when Linear
-   * accepted it; on failure the issue is put back and the error shown.
-   */
   /** Shows the action's outcome in the queue before Linear confirms it. */
   const applyOptimistically = (plan: ActionPlan, original?: TriageIssue) => {
     if (plan.removesFromQueue) {
-      hidden.add(plan.issueId);
+      hidden.set(plan.issueId, null);
       remove(plan.issueId);
     } else if (plan.kind === "unsnooze" && original) {
       replace({ ...original, snoozedBy: null, snoozedUntilAt: null });
@@ -149,6 +191,7 @@ export const useQueueStore = defineStore("queue", () => {
     original: TriageIssue | undefined,
     originalIndex: number
   ) => {
+    hidden.delete(plan.issueId);
     if (!original) {
       return;
     }
@@ -178,6 +221,7 @@ export const useQueueStore = defineStore("queue", () => {
    */
   async function perform(plan: ActionPlan): Promise<boolean> {
     const client = session.requireClient();
+    const detail = useDetailStore();
     const original = issueById(plan.issueId);
     const originalIndex = original ? issues.value.indexOf(original) : -1;
 
@@ -187,9 +231,17 @@ export const useQueueStore = defineStore("queue", () => {
       const result = await issueWriteQueue.run(plan.issueId, () =>
         executePlan(client, plan)
       );
-      if (result.issue && !plan.removesFromQueue) {
-        replace(result.issue);
+      if (plan.removesFromQueue) {
+        hidden.set(plan.issueId, refreshesStarted);
       }
+      if (result.issue) {
+        confirmed.set(result.issue.id, result.issue);
+        detail.merge(result.issue);
+        if (!plan.removesFromQueue) {
+          replace(result.issue);
+        }
+      }
+      detail.invalidate(plan.issueId);
       persist();
       announce(plan, result);
       return true;
@@ -199,9 +251,31 @@ export const useQueueStore = defineStore("queue", () => {
       return false;
     } finally {
       pending.delete(plan.issueId);
-      hidden.delete(plan.issueId);
     }
   }
+
+  /**
+   * Puts back the fields a failed edit changed, unless a later edit has
+   * changed them since: that edit's own outcome decides them.
+   */
+  const rollBackFields = (
+    issueId: string,
+    optimistic: Partial<TriageIssue>,
+    fallback: TriageIssue | undefined
+  ) => {
+    const current = issueById(issueId);
+    const base = confirmed.get(issueId) ?? fallback;
+    if (!(current && base)) {
+      return;
+    }
+    const restored: TriageIssue = { ...current };
+    for (const field of Object.keys(optimistic) as (keyof TriageIssue)[]) {
+      if (sameValue(current[field], optimistic[field])) {
+        Object.assign(restored, { [field]: base[field] });
+      }
+    }
+    replace(restored);
+  };
 
   /**
    * Updates properties of a queued issue. `optimistic` is applied at once
@@ -226,6 +300,8 @@ export const useQueueStore = defineStore("queue", () => {
       if (!(data.issueUpdate.success && updated)) {
         throw new MutationNotConfirmedError();
       }
+      confirmed.set(updated.id, updated);
+      useDetailStore().merge(updated);
       const workspace = useWorkspaceStore();
       const stillInTriage =
         workspace
@@ -239,10 +315,7 @@ export const useQueueStore = defineStore("queue", () => {
       persist();
       return true;
     } catch (failure) {
-      const current = issueById(issueId);
-      if (before && current) {
-        replace(before);
-      }
+      rollBackFields(issueId, optimistic, before);
       toasts.push({ message: describeError(failure), tone: "error" });
       return false;
     } finally {
@@ -259,6 +332,8 @@ export const useQueueStore = defineStore("queue", () => {
         error.value = null;
         teamFilter.value = null;
         view.value = "active";
+        hidden.clear();
+        confirmed.clear();
       }
     }
   );

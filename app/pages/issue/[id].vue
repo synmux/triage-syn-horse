@@ -52,6 +52,22 @@
     teamStates.value.find((candidate) => candidate.id === issue.value?.state.id)
   );
   const inTriage = computed(() => state.value?.type === "triage");
+  /**
+   * Whether the issue shown is known to be current: it is in the queue, or
+   * its detail is freshly loaded. Actions are never planned from stale data.
+   */
+  const settled = computed(() => {
+    if (queue.issueById(issueId.value)) {
+      return true;
+    }
+    const current = entry.value;
+    return (
+      current !== undefined &&
+      current.issue !== null &&
+      !current.loading &&
+      !detail.isStale(issueId.value)
+    );
+  });
   const snoozedUntil = computed(() =>
     issue.value?.snoozedUntilAt && isSnoozed(issue.value, queue.now)
       ? new Date(issue.value.snoozedUntilAt)
@@ -134,7 +150,7 @@
 
   function onStrip(kind: StripAction) {
     const current = issue.value;
-    if (!current) {
+    if (!(current && settled.value)) {
       return;
     }
     if (kind === "accept") {
@@ -390,7 +406,7 @@
 
     <ActionStrip
       v-if="issue && inTriage"
-      :disabled="queue.pending.has(issue.id)"
+      :disabled="!settled || queue.pending.has(issue.id)"
       :torn="tearing"
       @accept-options="acceptOpen = true"
       @act="onStrip"
