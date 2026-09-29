@@ -11,7 +11,7 @@
   "routes": [
     {
       "custom_domain": true,
-      "pattern": "https://triage.syn.horse/*"
+      "pattern": "triage.syn.horse"
     }
   ],
   "workers_dev": true,

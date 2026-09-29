@@ -67,6 +67,12 @@ export default defineNuxtConfig({
   // runs in vitest without booting Nuxt. Components are still auto-registered.
   imports: { autoImport: false },
   modules: ["@pinia/nuxt", "@vite-pwa/nuxt"],
+  nitro: {
+    // Pinned: in Workers Builds, Nitro detects the CI and picks
+    // `cloudflare-module`, which writes .wrangler/deploy/config.json redirecting
+    // `wrangler deploy` to a server entry a static build never produces.
+    preset: "static",
+  },
   pwa: {
     client: { installPrompt: false },
     manifest: {
