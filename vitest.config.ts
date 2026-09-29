@@ -12,6 +12,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Date maths (snooze presets, relative times) is tested in UK time.
+    env: { TZ: "Europe/London" },
     environment: "happy-dom",
     include: ["tests/unit/**/*.test.ts"],
     restoreMocks: true,
