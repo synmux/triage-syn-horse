@@ -30,12 +30,21 @@ Context for AI agents working on **linear-triage**, an iPhone-first web app for 
 | `pnpm typecheck` | `nuxt typecheck` (vue-tsc) |
 | `pnpm test` | vitest unit tests (`tests/unit`) |
 | `pnpm test:live` | read-only contract tests against the real Linear API (needs `LINEAR_API_KEY`) |
-| `pnpm test:e2e` | Playwright iPhone E2E with intercepted mutations (needs `LINEAR_API_KEY`, a generated build) |
+| `pnpm test:e2e` | Playwright iPhone E2E. **Currently disabled**: see E2E safety below |
 | `pnpm codegen` | regenerate typed GraphQL documents from `graphql/linear.schema.graphql` |
 | `pnpm schema:update` | refresh the vendored Linear SDL |
 | `pnpm generate` | static build to `.output/public` (+ `_headers`) |
 | `pnpm preview` | serve the build with `wrangler dev` on port 8788 |
 | `pnpm deploy` | verify, generate and `wrangler deploy` |
+
+## E2E safety
+
+On 2026-09-29 the E2E suite wrote to the live Linear workspace. In the production build the service worker (`registerType: autoUpdate`, `clientsClaim`) took control of the page, and requests that pass through a service worker are invisible to Playwright's `context.route`, so mutations the fixture meant to intercept reached Linear. The changes were reverted by hand. The suite is now skipped unconditionally. Before re-enabling it, add **both**:
+
+1. `serviceWorkers: "block"` in `playwright.config.ts` (the root cause), and
+2. an E2E-only build in which the Linear client sends every mutation to an unresolvable host (for example `https://linear-mutations.invalid/graphql`, via a build-time constant and a `mutationEndpoint` client option), so a missed interception cannot write anything; the deploy must refuse a build containing that host.
+
+Until then, verify mutations with the unit tests (fake client and stubbed fetch), never against the live API.
 
 ## Layout
 

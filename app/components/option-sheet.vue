@@ -84,6 +84,7 @@
             class="option"
             type="button"
             :aria-pressed="selected.includes(option.id)"
+            :data-option-id="option.id"
             @click="choose(option.id)"
           >
             <span aria-hidden="true" class="leading">

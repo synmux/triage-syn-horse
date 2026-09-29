@@ -124,6 +124,7 @@
           class="result"
           type="button"
           :aria-pressed="chosen?.id === result.id"
+          :data-issue-id="result.id"
           @click="chosen = result"
         >
           <span class="result-top">
