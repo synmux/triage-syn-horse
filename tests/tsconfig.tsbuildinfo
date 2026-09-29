@@ -1,0 +1,1 @@
+{"root":["../.nuxt/nuxt.d.ts","../app/app.vue","../app/lib/linear/operations.ts","../app/lib/linear/generated/gql.ts","../app/lib/linear/generated/graphql.ts","../app/lib/linear/generated/index.ts","../app/pages/index.vue","./unit/smoke.test.ts","./unit/linear/operations.test.ts"],"version":"6.0.3"}
