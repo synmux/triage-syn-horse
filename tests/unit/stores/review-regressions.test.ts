@@ -95,7 +95,8 @@ describe("two queued edits that both fail", () => {
     const secondEdit = queue.edit("issue-1", { priority: 4 }, { priority: 4 });
     await Promise.all([firstEdit, secondEdit]);
 
-    expect(queue.issueById("issue-1")?.priority).toBe(0);
+    // Back to what Linear last confirmed (the fixture's Medium).
+    expect(queue.issueById("issue-1")?.priority).toBe(3);
   });
 
   it("keeps a later edit's value when only the earlier edit fails", async () => {

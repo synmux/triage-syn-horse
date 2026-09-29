@@ -7,7 +7,8 @@
   import type { SwipeDirection } from "~/lib/gestures";
   import { describeError } from "~/lib/linear/errors";
   import type { Label, TriageIssue } from "~/lib/linear/types";
-  import { issuePath } from "~/lib/routes";
+  import { acceptGuideRoute, issuePath } from "~/lib/routes";
+  import { acceptBlockers } from "~/lib/triage/actions";
   import { usePreferencesStore } from "~/stores/preferences";
   import { useQueueStore } from "~/stores/queue";
   import { useSessionStore } from "~/stores/session";
@@ -58,8 +59,17 @@
       : { label: "Decline", tone: "decline" as const }
   );
 
+  /** True when Accept would refuse the issue for missing properties. */
+  function needsSettingUp(issue: TriageIssue): boolean {
+    const team = workspace.teamById(issue.team.id);
+    return team !== undefined && acceptBlockers(issue, team).length > 0;
+  }
+
   function onSwipe(issue: TriageIssue, direction: SwipeDirection) {
-    if (direction === "right") {
+    if (direction === "right" && needsSettingUp(issue)) {
+      // Accept would refuse it: open the issue to fill in what it needs.
+      navigateTo(acceptGuideRoute(issue.id));
+    } else if (direction === "right") {
       actions.accept(issue);
     } else if (preferences.values.leftSwipe === "snooze") {
       actions.snoozeUntilTomorrow(issue);

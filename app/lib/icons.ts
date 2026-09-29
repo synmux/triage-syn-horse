@@ -9,6 +9,12 @@ const circle = (centreX: number, centreY: number, radius: number) =>
 
 export const iconPaths = {
   back: ["M15 18l-6-6 6-6"],
+  calendar: [
+    "M4 6a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z",
+    "M4 10h16",
+    "M8 3v4",
+    "M16 3v4",
+  ],
   check: ["M5 12.5l4.5 4.5L19 7.5"],
   chevronDown: ["M6 9l6 6 6-6"],
   chevronRight: ["M9 18l6-6-6-6"],

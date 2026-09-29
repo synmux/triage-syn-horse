@@ -18,3 +18,14 @@ export interface PickerSection {
   options: PickerOption[];
   title: string | null;
 }
+
+/** The property pickers on the issue screen, openable by name. */
+export type PropertyPicker =
+  | "status"
+  | "priority"
+  | "estimate"
+  | "dueDate"
+  | "labels"
+  | "project"
+  | "assignee"
+  | "team";

@@ -28,6 +28,69 @@ export function formatFullDateTime(date: Date): string {
   return fullDateTime.format(date);
 }
 
+const dueDateThisYear = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  weekday: "short",
+});
+
+const dueDateOtherYear = new Intl.DateTimeFormat("en-GB", {
+  day: "numeric",
+  month: "short",
+  weekday: "short",
+  year: "numeric",
+});
+
+const calendarDatePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/** A Linear due date ("YYYY-MM-DD", no time zone) as a local calendar date. */
+function calendarDate(value: string): Date | null {
+  const match = calendarDatePattern.exec(value);
+  if (!match) {
+    return null;
+  }
+  const [year, month, day] = match.slice(1).map(Number) as [
+    number,
+    number,
+    number,
+  ];
+  const date = new Date(year, month - 1, day);
+  const real =
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day;
+  return real ? date : null;
+}
+
+/** "Mon 5 Oct", with the year when it isn't this year. */
+export function formatDueDate(value: string, now: Date = new Date()): string {
+  const date = calendarDate(value);
+  if (!date) {
+    return value;
+  }
+  return date.getFullYear() === now.getFullYear()
+    ? dueDateThisYear.format(date)
+    : dueDateOtherYear.format(date);
+}
+
+/** True once the due date's day has ended; the due day itself is not overdue. */
+export function isOverdue(value: string, now: Date): boolean {
+  const date = calendarDate(value);
+  if (!date) {
+    return false;
+  }
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return date.getTime() < today.getTime();
+}
+
+/** Checks an `<input type="date">` value and returns it as Linear expects. */
+export function parseDueDateInput(value: string): string {
+  if (!calendarDate(value)) {
+    throw new Error("Choose a date");
+  }
+  return value;
+}
+
 const minute = 60 * 1000;
 const hour = 60 * minute;
 const day = 24 * hour;

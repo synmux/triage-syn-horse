@@ -1,5 +1,6 @@
 <script lang="ts" setup>
-  import type { StripAction } from "~/lib/triage/actions";
+  import { computed } from "vue";
+  import type { AcceptBlocker, StripAction } from "~/lib/triage/actions";
 
   /**
    * The tear-off strip: the four triage outcomes along the bottom edge,
@@ -7,11 +8,21 @@
    * tears away when an action is taken.
    */
 
-  const { disabled = false, torn = null } = defineProps<{
+  const {
+    disabled = false,
+    missing = [],
+    torn = null,
+  } = defineProps<{
     disabled?: boolean;
+    /** What the issue still needs before it can be accepted. */
+    missing?: AcceptBlocker[];
     /** The action being taken right now, animated as torn off. */
     torn?: StripAction | null;
   }>();
+
+  const needs = computed(() =>
+    missing.length === 0 ? null : `Needs ${missing.join(", ")}`
+  );
   const emit = defineEmits<{
     act: [action: StripAction];
     acceptOptions: [];
@@ -55,16 +66,23 @@
         <AppIcon name="clock" :size="20" />
         <span>Snooze</span>
       </button>
-      <div class="segment accept" :class="{ torn: torn === 'accept' }">
+      <div
+        class="segment accept"
+        :class="{ blocked: needs !== null, torn: torn === 'accept' }"
+      >
         <button
           aria-keyshortcuts="1"
           class="accept-main"
           type="button"
+          :aria-description="needs ?? undefined"
           :disabled="disabled"
           @click="emit('act', 'accept')"
         >
           <AppIcon name="check" :size="22" />
-          <span>Accept</span>
+          <span class="accept-text">
+            <span>Accept</span>
+            <span class="accept-needs" v-if="needs">{{ needs }}</span>
+          </span>
         </button>
         <button
           aria-label="Accept into another state or with a comment"
@@ -171,6 +189,27 @@
     color: var(--colour-accept-on-fill);
     background: var(--colour-accept-fill);
   }
+  /* Not ready yet: outlined instead of filled, and says what is missing. */
+  .accept.blocked {
+    color: var(--colour-accept);
+    background: color-mix(
+      in srgb,
+      var(--colour-accept-fill) var(--tint-strength),
+      var(--colour-surface)
+    );
+    box-shadow: inset 0 0 0 1.5px var(--colour-accept);
+  }
+  .accept-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1.1;
+  }
+  .accept-needs {
+    font-family: var(--font-body);
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
   .accept-main {
     display: flex;
     flex: 1;
@@ -190,6 +229,13 @@
   .accept-main:active,
   .accept-more:active {
     background: rgb(0 0 0 / 0.08);
+  }
+  .accept.blocked .accept-more {
+    border-left-color: color-mix(
+      in srgb,
+      var(--colour-accept) 40%,
+      transparent
+    );
   }
   .segment.torn {
     opacity: 0;

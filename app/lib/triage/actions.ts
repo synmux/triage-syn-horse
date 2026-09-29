@@ -12,7 +12,58 @@ import type {
   TriageIssue,
   WorkflowState,
 } from "../linear/types";
+import { estimationEnabled } from "./estimates";
 import { acceptState, acceptTargets, declineState } from "./states";
+
+/** A property an issue must have before it may be accepted. */
+export type AcceptBlocker = "priority" | "estimate";
+
+const blockerNames: Record<AcceptBlocker, string> = {
+  estimate: "an estimate",
+  priority: "a priority",
+};
+
+/** "a priority and an estimate": what is missing, in words. */
+export function describeAcceptBlockers(missing: AcceptBlocker[]): string {
+  return missing.map((blocker) => blockerNames[blocker]).join(" and ");
+}
+
+/** Accepting was refused because the issue is not ready yet. */
+export class AcceptBlockedError extends Error {
+  override name = "AcceptBlockedError";
+  readonly missing: AcceptBlocker[];
+
+  constructor(identifier: string, missing: AcceptBlocker[]) {
+    super(
+      `${identifier} needs ${describeAcceptBlockers(missing)} before it can be accepted`
+    );
+    this.missing = missing;
+  }
+}
+
+/**
+ * What an issue still needs before it may be accepted: always a priority,
+ * and an estimate when the team uses estimates (otherwise one could never
+ * be set). An estimate of zero counts.
+ */
+export function acceptBlockers(
+  issue: Pick<TriageIssue, "priority" | "estimate">,
+  team: Pick<
+    Team,
+    | "issueEstimationType"
+    | "issueEstimationExtended"
+    | "issueEstimationAllowZero"
+  >
+): AcceptBlocker[] {
+  const missing: AcceptBlocker[] = [];
+  if (issue.priority === 0) {
+    missing.push("priority");
+  }
+  if (estimationEnabled(team) && issue.estimate === null) {
+    missing.push("estimate");
+  }
+  return missing;
+}
 
 /** A forward step, with what is needed to reverse it. */
 export type PlannedStep =
@@ -73,7 +124,13 @@ export interface ActionPlan {
 
 type PlannableIssue = Pick<
   TriageIssue,
-  "id" | "identifier" | "priority" | "state" | "snoozedUntilAt" | "snoozedBy"
+  | "id"
+  | "identifier"
+  | "priority"
+  | "estimate"
+  | "state"
+  | "snoozedUntilAt"
+  | "snoozedBy"
 >;
 
 const commentSteps = (
@@ -97,10 +154,9 @@ export function planAccept(
   teamStates: WorkflowState[],
   options: { stateId?: string; comment?: string } = {}
 ): ActionPlan {
-  if (team.requirePriorityToLeaveTriage && issue.priority === 0) {
-    throw new Error(
-      `${team.key} requires a priority before an issue leaves triage`
-    );
+  const missing = acceptBlockers(issue, team);
+  if (missing.length > 0) {
+    throw new AcceptBlockedError(issue.identifier, missing);
   }
   let target = acceptState(team, teamStates);
   if (options.stateId) {

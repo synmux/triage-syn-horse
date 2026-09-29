@@ -15,6 +15,7 @@ export const TriageIssueFields = graphql(`
     title
     priority
     estimate
+    dueDate
     createdAt
     updatedAt
     snoozedUntilAt

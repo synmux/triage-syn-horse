@@ -149,7 +149,7 @@ Mutations: `UpdateIssue`, `CreateComment`, `DeleteComment`, `CreateIssueRelation
 - **labels.ts** — `assignableLabels(team, labels)` (workspace + team labels, groups as headers only), `toggleLabel(selected, label, labels)` enforcing one child per group, `labelDelta(before, after)` → `{ addedLabelIds, removedLabelIds }` (deltas avoid clobbering concurrent edits).
 - **team-move.ts** — `planTeamMove(issue, targetTeam, workspace)` → `{ input, warnings }`: sets `teamId`, keeps the issue in triage (`stateId` = target triage state, falling back to its default state), maps team labels by name (and parent group name) to the target team, drops unmappable labels with a warning, clears project if it does not include the target team.
 - **actions.ts** — planners returning *data*, never closures:
-  - `planAccept(issue, team, { stateId?, comment? })` — refuses if `requirePriorityToLeaveTriage` and priority is 0.
+  - `planAccept(issue, team, { stateId?, comment? })` — refuses with `AcceptBlockedError` unless the issue has a priority and, in teams that use estimates, an estimate (`acceptBlockers(issue, team)`). This is the owner's triage rule (added 2026-09-29) and is stricter than Linear's `requirePriorityToLeaveTriage`, which every team leaves off. Enforced in the planner, so every accept path (strip, sheet, swipe, keyboard) obeys it.
   - `planDecline(issue, team, { comment? })`
   - `planDuplicate(issue, canonical)`
   - `planSnooze(issue, until, viewerId)` / `planUnsnooze(issue)`
@@ -175,8 +175,8 @@ Visual language: native-feeling iOS utility. System font stack (SF Pro, SF Mono 
 ### Screens
 
 1. **Connect** (`/connect`) — what the app does, where to create a key (Linear → Settings → Security & access → Personal API keys, *Read* + *Write*, no *Admin*), key field with a **Paste** button, verification showing who you are, a note that the installed home-screen app has its own storage so the key must be pasted inside it.
-2. **Queue** (`/`) — large-title nav "Triage" with count; team filter chips with counts; rows (identifier, team colour, two-line title, source/creator, age, priority, estimate, labels); swipe right = accept, swipe left = decline (or snooze, per preference); pull to refresh; "Snoozed (n)" toggle; header buttons for Recent and Settings; empty state "Triage is clear".
-3. **Issue** (`/issue/:id`) — nav bar with back, position "3 of 39", previous/next, overflow (Open in Linear, Copy link); team and identifier; title (tap to edit); horizontally scrolling property bar (Priority, Estimate, Labels, Project, Assignee, Team); created-by line; description; attachments; relations; comments with an "Add comment" button; sticky bottom action bar: **Decline · Duplicate · Snooze · Accept** (Accept primary; its chevron opens state choice + comment). After an action it auto-advances to the next issue (preference) or returns to the queue.
+2. **Queue** (`/`) — large-title nav "Triage" with count; team filter chips with counts; rows (identifier, team colour, two-line title, source/creator, age, priority, estimate, due date, labels); swipe right = accept (an unready issue opens with the accept guide instead), swipe left = decline (or snooze, per preference); pull to refresh; "Snoozed (n)" toggle; header buttons for Recent and Settings; empty state "Triage is clear".
+3. **Issue** (`/issue/:id`) — nav bar with back, position "3 of 39", previous/next, overflow (Open in Linear, Copy link); team and identifier; title (tap to edit); horizontally scrolling property bar (Accept to *status*, Priority, Estimate, Due date, Labels, Project, Assignee, Team; Priority and Estimate are outlined while Accept needs them); created-by line; description; attachments; relations; comments with an "Add comment" button; sticky bottom action bar: **Decline · Duplicate · Snooze · Accept** (Accept primary; its chevron opens state choice + comment). After an action it auto-advances to the next issue (preference) or returns to the queue.
 4. **Recent** (`/recent`) — action history with Undo per entry.
 5. **Settings** (`/settings`) — account, preferences, disconnect.
 
@@ -224,7 +224,7 @@ Visual language: native-feeling iOS utility. System font stack (SF Pro, SF Mono 
 
 ## 13. Out of scope
 
-OAuth, multiple users, push notifications, offline mutation queue, editing descriptions, creating issues, Triage Intelligence suggestions (internal API), cycles (disabled in every team), due dates, sub-issue management.
+OAuth, multiple users, push notifications, offline mutation queue, editing descriptions, creating issues, Triage Intelligence suggestions (internal API), cycles (disabled in every team), sub-issue management.
 
 ## 14. Known risks
 

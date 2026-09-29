@@ -1,7 +1,12 @@
 <script lang="ts" setup>
   import { computed } from "vue";
   import { sourceLabel } from "~/lib/format/text";
-  import { formatShortDateTime, relativeAge } from "~/lib/format/time";
+  import {
+    formatDueDate,
+    formatShortDateTime,
+    isOverdue,
+    relativeAge,
+  } from "~/lib/format/time";
   import type { Label, Team, TriageIssue } from "~/lib/linear/types";
   import { issuePath } from "~/lib/routes";
   import { estimateLabel } from "~/lib/triage/estimates";
@@ -31,6 +36,14 @@
   const age = computed(() => relativeAge(new Date(issue.createdAt), now));
   const estimate = computed(() =>
     team ? estimateLabel(team, issue.estimate) : null
+  );
+  const dueDate = computed(() =>
+    issue.dueDate
+      ? {
+          label: formatDueDate(issue.dueDate, now),
+          overdue: isOverdue(issue.dueDate, now),
+        }
+      : null
   );
   const snoozedUntil = computed(() =>
     issue.snoozedUntilAt && isSnoozed(issue, now)
@@ -63,7 +76,7 @@
     <IssueTitle class="title" :title="issue.title" />
     <span
       class="meta"
-      v-if="origin || snoozedUntil || labels.length || estimate"
+      v-if="origin || snoozedUntil || labels.length || estimate || dueDate"
     >
       <span class="snoozed" v-if="snoozedUntil">
         <AppIcon name="clock" :size="14" />
@@ -71,6 +84,17 @@
       </span>
       <span class="origin" v-else-if="origin">{{ origin }}</span>
       <span class="estimate tabular" v-if="estimate">{{ estimate }}</span>
+      <span
+        class="due tabular"
+        v-if="dueDate"
+        :class="{ overdue: dueDate.overdue }"
+      >
+        <AppIcon name="calendar" :size="14" />
+        <span class="visually-hidden">{{
+          dueDate.overdue ? "Overdue, was due" : "Due"
+        }}</span>
+        {{ dueDate.label }}
+      </span>
       <span
         class="label"
         v-for="label in visibleLabels"
@@ -158,6 +182,15 @@
     font-weight: 650;
     border: 1px solid var(--colour-line);
     border-radius: var(--radius-small);
+  }
+  .due {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+  }
+  .due.overdue {
+    font-weight: 650;
+    color: var(--colour-decline);
   }
   .label {
     display: inline-flex;

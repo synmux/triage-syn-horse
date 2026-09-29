@@ -9,7 +9,8 @@ import { makeIssue, makeWorkspace } from "../../support/factories";
 import { connection, stubLinearFetch } from "../../support/fetch-stub";
 
 const workspace = makeWorkspace();
-const issue = makeIssue();
+// Ready to accept: accepting needs a priority and an estimate.
+const issue = makeIssue({ estimate: 2, priority: 3 });
 
 async function setUp(
   overrides: Record<string, (variables: never) => unknown> = {}
@@ -113,5 +114,24 @@ describe("useTriageActions", () => {
     expect(useToastStore().items.at(-1)?.message).toBe(
       "The team for ZZZ-1 has not loaded yet. Try again in a moment."
     );
+  });
+});
+
+describe("accepting an issue that isn't ready", () => {
+  it("sends nothing and says what is missing", async () => {
+    const { requests } = await setUp();
+    const before = requests.length;
+    const unready = makeIssue({ id: "issue-1", identifier: "MYR-1" });
+
+    const handle = useTriageActions().accept(unready);
+
+    expect(handle.planned).toBe(false);
+    await expect(handle.completion).resolves.toBe(false);
+    expect(requests).toHaveLength(before);
+    expect(useToastStore().items.at(-1)).toMatchObject({
+      message:
+        "MYR-1 needs a priority and an estimate before it can be accepted",
+      tone: "error",
+    });
   });
 });

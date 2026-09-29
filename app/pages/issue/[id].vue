@@ -1,6 +1,7 @@
 <script lang="ts" setup>
-  import { computed, ref, watch } from "vue";
+  import { computed, ref, useTemplateRef, watch } from "vue";
   import { useRoute, useRouter } from "vue-router";
+  import { useAcceptGuide } from "~/composables/use-accept-guide";
   import { useKeyboardShortcuts } from "~/composables/use-keyboard-shortcuts";
   import {
     type ActionHandle,
@@ -14,8 +15,9 @@
   } from "~/lib/format/time";
   import { describeError } from "~/lib/linear/errors";
   import type { IssueUpdateInput, TriageIssue } from "~/lib/linear/types";
-  import { issuePath } from "~/lib/routes";
-  import type { StripAction } from "~/lib/triage/actions";
+  import type { PropertyPicker } from "~/lib/picker";
+  import { acceptGuideQuery, issuePath } from "~/lib/routes";
+  import { acceptBlockers, type StripAction } from "~/lib/triage/actions";
   import { isSnoozed, neighbours, nextAfterRemoval } from "~/lib/triage/queue";
   import { acceptState, acceptTargets } from "~/lib/triage/states";
   import { useDetailStore } from "~/stores/detail";
@@ -52,6 +54,37 @@
     teamStates.value.find((candidate) => candidate.id === issue.value?.state.id)
   );
   const inTriage = computed(() => state.value?.type === "triage");
+  /** What the issue still needs before Accept will take it. */
+  const missing = computed(() =>
+    issue.value && team.value && inTriage.value
+      ? acceptBlockers(issue.value, team.value)
+      : []
+  );
+  const statusTargets = computed(() =>
+    team.value && inTriage.value
+      ? acceptTargets(team.value, teamStates.value)
+      : []
+  );
+  const defaultAcceptStateId = computed(() => {
+    if (!team.value) {
+      return null;
+    }
+    try {
+      return acceptState(team.value, teamStates.value).id;
+    } catch {
+      // No acceptable state: the Accept action itself reports this.
+      return null;
+    }
+  });
+  /** The status chosen for accepting; null means the team default. */
+  const acceptStateId = ref<string | null>(null);
+  const propertyBar = useTemplateRef<{
+    open: (picker: PropertyPicker) => void;
+  }>("propertyBar");
+  const guide = useAcceptGuide({
+    missing,
+    open: (picker) => propertyBar.value?.open(picker),
+  });
   /**
    * Whether the issue shown is known to be current: it is in the queue, or
    * its detail is freshly loaded. Actions are never planned from stale data.
@@ -109,6 +142,8 @@
     issueId,
     (id) => {
       tearing.value = null;
+      acceptStateId.value = null;
+      guide.stop();
       detail.load(id).catch(() => {
         // Shown from the entry's error below.
       });
@@ -148,13 +183,44 @@
     }
   }
 
+  /**
+   * Swiping an unready issue right in the queue lands here with the guide
+   * query; start guiding once the property pickers can open.
+   */
+  watch(
+    () =>
+      route.query.accept === acceptGuideQuery.accept &&
+      settled.value &&
+      propertyBar.value !== null,
+    (ready) => {
+      if (!ready) {
+        return;
+      }
+      router.replace({ path: route.path });
+      guide.start();
+    },
+    { flush: "post", immediate: true }
+  );
+
+  function openAcceptOptions() {
+    if (settled.value && !guide.start()) {
+      acceptOpen.value = true;
+    }
+  }
+
   function onStrip(kind: StripAction) {
     const current = issue.value;
     if (!(current && settled.value)) {
       return;
     }
     if (kind === "accept") {
-      act("accept", () => actions.accept(current));
+      if (guide.start()) {
+        return;
+      }
+      const chosen = acceptStateId.value;
+      act("accept", () =>
+        actions.accept(current, chosen ? { stateId: chosen } : {})
+      );
     } else if (kind === "decline") {
       declineOpen.value = true;
     } else if (kind === "duplicate") {
@@ -362,8 +428,14 @@
 
         <PropertyBar
           v-if="team && workspace.snapshot"
+          ref="propertyBar"
+          v-model:accept-state-id="acceptStateId"
+          :accept-targets="statusTargets"
+          :default-accept-state-id="defaultAcceptStateId"
           :issue="issue"
           :labels="workspace.snapshot.labels"
+          :missing="missing"
+          :now="queue.now"
           :projects="workspace.projectsFor(team.id)"
           :team="team"
           :teams="workspace.teams"
@@ -407,15 +479,16 @@
     <ActionStrip
       v-if="issue && inTriage"
       :disabled="!settled || queue.pending.has(issue.id)"
+      :missing="missing"
       :torn="tearing"
-      @accept-options="acceptOpen = true"
+      @accept-options="openAcceptOptions"
       @act="onStrip"
     />
 
     <template v-if="issue && team">
       <AcceptSheet
         v-model:open="acceptOpen"
-        :default-state-id="acceptState(team, teamStates).id"
+        :default-state-id="acceptStateId ?? defaultAcceptStateId ?? ''"
         :identifier="issue.identifier"
         :targets="acceptTargets(team, teamStates)"
         @confirm="(choice) => withIssue((current) => act('accept', () => actions.accept(current, choice)))"

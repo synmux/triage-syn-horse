@@ -189,7 +189,7 @@ export type SlaDayCountType =
   | 'all'
   | 'onlyBusinessDays';
 
-export type TriageIssueFieldsFragment = { id: string, identifier: string, title: string, priority: number, estimate: number | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null };
+export type TriageIssueFieldsFragment = { id: string, identifier: string, title: string, priority: number, estimate: number | null, dueDate: string | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null };
 
 export type ViewerQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -236,14 +236,14 @@ export type TriageQueueQueryVariables = Exact<{
 }>;
 
 
-export type TriageQueueQuery = { issues: { nodes: Array<{ id: string, identifier: string, title: string, priority: number, estimate: number | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } };
+export type TriageQueueQuery = { issues: { nodes: Array<{ id: string, identifier: string, title: string, priority: number, estimate: number | null, dueDate: string | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null }>, pageInfo: { hasNextPage: boolean, endCursor: string | null } } };
 
 export type IssueDetailQueryVariables = Exact<{
   id: string;
 }>;
 
 
-export type IssueDetailQuery = { issue: { description: string | null, id: string, identifier: string, title: string, priority: number, estimate: number | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, parent: { id: string, identifier: string, title: string } | null, attachments: { nodes: Array<{ id: string, title: string, subtitle: string | null, url: string, sourceType: string | null }> }, comments: { nodes: Array<{ id: string, body: string, createdAt: string, parent: { id: string } | null, user: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUser: { name: string, avatarUrl: string | null } | null }> }, relations: { nodes: Array<{ id: string, type: string, relatedIssue: { id: string, identifier: string, title: string, state: { id: string, name: string, type: string, color: string } } }> }, inverseRelations: { nodes: Array<{ id: string, type: string, issue: { id: string, identifier: string, title: string, state: { id: string, name: string, type: string, color: string } } }> }, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null } };
+export type IssueDetailQuery = { issue: { description: string | null, id: string, identifier: string, title: string, priority: number, estimate: number | null, dueDate: string | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, parent: { id: string, identifier: string, title: string } | null, attachments: { nodes: Array<{ id: string, title: string, subtitle: string | null, url: string, sourceType: string | null }> }, comments: { nodes: Array<{ id: string, body: string, createdAt: string, parent: { id: string } | null, user: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUser: { name: string, avatarUrl: string | null } | null }> }, relations: { nodes: Array<{ id: string, type: string, relatedIssue: { id: string, identifier: string, title: string, state: { id: string, name: string, type: string, color: string } } }> }, inverseRelations: { nodes: Array<{ id: string, type: string, issue: { id: string, identifier: string, title: string, state: { id: string, name: string, type: string, color: string } } }> }, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null } };
 
 export type IssueStateQueryVariables = Exact<{
   id: string;
@@ -265,7 +265,7 @@ export type UpdateIssueMutationVariables = Exact<{
 }>;
 
 
-export type UpdateIssueMutation = { issueUpdate: { success: boolean, issue: { id: string, identifier: string, title: string, priority: number, estimate: number | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null } | null } };
+export type UpdateIssueMutation = { issueUpdate: { success: boolean, issue: { id: string, identifier: string, title: string, priority: number, estimate: number | null, dueDate: string | null, createdAt: string, updatedAt: string, snoozedUntilAt: string | null, url: string, integrationSourceType: IntegrationService | null, snoozedBy: { id: string } | null, team: { id: string }, state: { id: string }, assignee: { id: string } | null, project: { id: string } | null, labels: { nodes: Array<{ id: string }> }, creator: { id: string, displayName: string, avatarUrl: string | null } | null, botActor: { name: string | null, avatarUrl: string | null } | null, externalUserCreator: { name: string, avatarUrl: string | null } | null } | null } };
 
 export type CreateCommentMutationVariables = Exact<{
   input: CommentCreateInput;
@@ -320,6 +320,7 @@ export const TriageIssueFieldsFragmentDoc = new TypedDocumentString(`
   title
   priority
   estimate
+  dueDate
   createdAt
   updatedAt
   snoozedUntilAt
@@ -513,6 +514,7 @@ export const TriageQueueDocument = new TypedDocumentString(`
   title
   priority
   estimate
+  dueDate
   createdAt
   updatedAt
   snoozedUntilAt
@@ -636,6 +638,7 @@ export const IssueDetailDocument = new TypedDocumentString(`
   title
   priority
   estimate
+  dueDate
   createdAt
   updatedAt
   snoozedUntilAt
@@ -725,6 +728,7 @@ export const UpdateIssueDocument = new TypedDocumentString(`
   title
   priority
   estimate
+  dueDate
   createdAt
   updatedAt
   snoozedUntilAt

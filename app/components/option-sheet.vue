@@ -8,6 +8,7 @@
    */
   const open = defineModel<boolean>("open", { required: true });
   const {
+    description,
     multiple = false,
     searchable = false,
     sections,
@@ -15,6 +16,8 @@
     title,
   } = defineProps<{
     title: string;
+    /** Shown under the title, for example why the picker opened. */
+    description?: string;
     sections: PickerSection[];
     selected: string[];
     multiple?: boolean;
@@ -59,7 +62,7 @@
 </script>
 
 <template>
-  <BottomSheet v-model:open="open" :title="title">
+  <BottomSheet v-model:open="open" :description="description" :title="title">
     <label class="search" v-if="searchable">
       <AppIcon name="search" :size="18" />
       <span class="visually-hidden">Filter {{ title.toLowerCase() }}</span>

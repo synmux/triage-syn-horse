@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { computed, ref } from "vue";
+  import { formatDueDate, isOverdue } from "~/lib/format/time";
   import { describeError } from "~/lib/linear/errors";
   import type {
     IssueUpdateInput,
@@ -8,9 +9,11 @@
     Team,
     TriageIssue,
     User,
+    WorkflowState,
     WorkspaceSnapshot,
   } from "~/lib/linear/types";
-  import type { PickerSection } from "~/lib/picker";
+  import type { PickerSection, PropertyPicker } from "~/lib/picker";
+  import type { AcceptBlocker } from "~/lib/triage/actions";
   import {
     estimateLabel,
     estimateOptions,
@@ -29,17 +32,42 @@
    * The issue's editable properties as a row of chips, each opening a
    * picker. Emits the Linear input to send, the optimistic patch to show
    * at once, and any warnings the change produced.
+   *
+   * The Status chip is different: it only chooses the state Accept will
+   * move the issue into (a v-model), so it never takes an issue out of
+   * triage by itself.
    */
-  const { issue, labels, projects, team, teams, users, workspace } =
-    defineProps<{
-      issue: TriageIssue;
-      team: Team;
-      teams: Team[];
-      labels: Label[];
-      projects: Project[];
-      users: User[];
-      workspace: WorkspaceSnapshot;
-    }>();
+  const {
+    acceptTargets,
+    defaultAcceptStateId,
+    issue,
+    labels,
+    missing,
+    now,
+    projects,
+    team,
+    teams,
+    users,
+    workspace,
+  } = defineProps<{
+    issue: TriageIssue;
+    team: Team;
+    teams: Team[];
+    labels: Label[];
+    projects: Project[];
+    users: User[];
+    workspace: WorkspaceSnapshot;
+    /** States the issue can be accepted into; empty when not in triage. */
+    acceptTargets: WorkflowState[];
+    defaultAcceptStateId: string | null;
+    /** Properties still needed before the issue can be accepted. */
+    missing: AcceptBlocker[];
+    now: Date;
+  }>();
+  /** The state Accept will use; null means the team's default. */
+  const acceptStateId = defineModel<string | null>("acceptStateId", {
+    required: true,
+  });
   const emit = defineEmits<{
     update: [
       input: IssueUpdateInput,
@@ -48,13 +76,7 @@
     ];
   }>();
 
-  type Picker =
-    | "priority"
-    | "estimate"
-    | "labels"
-    | "project"
-    | "assignee"
-    | "team";
+  type Picker = PropertyPicker;
   const openPicker = ref<Picker | null>(null);
   const pickerOpen = (picker: Picker) =>
     computed({
@@ -63,7 +85,9 @@
         openPicker.value = value ? picker : null;
       },
     });
+  const statusOpen = pickerOpen("status");
   const priorityOpen = pickerOpen("priority");
+  const dueDateOpen = pickerOpen("dueDate");
   const estimateOpen = pickerOpen("estimate");
   const labelsOpen = pickerOpen("labels");
   const projectOpen = pickerOpen("project");
@@ -86,6 +110,38 @@
     users.find((user) => user.id === issue.assignee?.id)
   );
   const estimate = computed(() => estimateLabel(team, issue.estimate));
+  const acceptState = computed(() =>
+    acceptTargets.find(
+      (state) => state.id === (acceptStateId.value ?? defaultAcceptStateId)
+    )
+  );
+  /** Explains, in the picker, why Accept is waiting on this property. */
+  const neededNote = (blocker: AcceptBlocker) =>
+    missing.includes(blocker)
+      ? `Needed before ${issue.identifier} can be accepted`
+      : undefined;
+  const dueDateOverdue = computed(
+    () => issue.dueDate !== null && isOverdue(issue.dueDate, now)
+  );
+
+  /** Opens a picker from outside, for example to fill in what Accept needs. */
+  defineExpose({
+    open: (picker: Picker) => {
+      openPicker.value = picker;
+    },
+  });
+
+  const statusChoices = computed<PickerSection[]>(() => [
+    {
+      options: acceptTargets.map((state) => ({
+        colour: state.color,
+        hint: state.id === defaultAcceptStateId ? "Team default" : undefined,
+        id: state.id,
+        label: state.name,
+      })),
+      title: null,
+    },
+  ]);
 
   const priorityChoices: PickerSection[] = [
     {
@@ -157,6 +213,16 @@
       title: null,
     },
   ]);
+
+  function chooseStatus(id: string) {
+    acceptStateId.value = id === defaultAcceptStateId ? null : id;
+  }
+
+  function chooseDueDate(dueDate: string | null) {
+    if (dueDate !== issue.dueDate) {
+      emit("update", { dueDate }, { dueDate }, []);
+    }
+  }
 
   function choosePriority(id: string) {
     const priority = Number(id);
@@ -238,7 +304,27 @@
 <template>
   <div class="properties">
     <div class="property-bar">
-      <button class="chip" type="button" @click="openPicker = 'priority'">
+      <button
+        class="chip"
+        type="button"
+        v-if="acceptState"
+        @click="openPicker = 'status'"
+      >
+        <span
+          aria-hidden="true"
+          class="dot"
+          :style="{ background: acceptState.color }"
+        />
+        <span class="chip-prefix">Accept to</span>
+        {{ acceptState.name }}
+      </button>
+      <button
+        class="chip"
+        type="button"
+        :aria-description="missing.includes('priority') ? 'Needed before accepting' : undefined"
+        :class="{ needed: missing.includes('priority') }"
+        @click="openPicker = 'priority'"
+      >
         <PriorityIcon :priority="issue.priority" />
         {{ issue.priority === 0 ? "Priority" : priorityLabel(issue.priority) }}
       </button>
@@ -246,10 +332,27 @@
         class="chip"
         type="button"
         v-if="estimationEnabled(team)"
+        :aria-description="missing.includes('estimate') ? 'Needed before accepting' : undefined"
+        :class="{ needed: missing.includes('estimate') }"
         @click="openPicker = 'estimate'"
       >
         <AppIcon name="estimate" :size="16" />
         <span :class="{ tabular: estimate }">{{ estimate ?? "Estimate" }}</span>
+      </button>
+      <button
+        class="chip"
+        type="button"
+        :class="{ overdue: dueDateOverdue }"
+        @click="openPicker = 'dueDate'"
+      >
+        <AppIcon name="calendar" :size="16" />
+        <template v-if="issue.dueDate">
+          <span class="visually-hidden">{{
+            dueDateOverdue ? "Overdue, was due" : "Due"
+          }}</span>
+          {{ formatDueDate(issue.dueDate, now) }}
+        </template>
+        <template v-else>Due date</template>
       </button>
       <button class="chip" type="button" @click="openPicker = 'labels'">
         <template v-if="selectedLabels.length === 0">
@@ -295,8 +398,22 @@
     </div>
 
     <OptionSheet
+      title="Status once accepted"
+      v-model:open="statusOpen"
+      :sections="statusChoices"
+      :selected="acceptState ? [acceptState.id] : []"
+      @choose="chooseStatus"
+    />
+    <DueDateSheet
+      v-model:open="dueDateOpen"
+      :current="issue.dueDate"
+      :identifier="issue.identifier"
+      @choose="chooseDueDate"
+    />
+    <OptionSheet
       title="Priority"
       v-model:open="priorityOpen"
+      :description="neededNote('priority')"
       :sections="priorityChoices"
       :selected="[String(issue.priority)]"
       @choose="choosePriority"
@@ -304,6 +421,7 @@
     <OptionSheet
       title="Estimate"
       v-model:open="estimateOpen"
+      :description="neededNote('estimate')"
       :sections="estimateChoices"
       :selected="[issue.estimate === null ? noneId : String(issue.estimate)]"
       @choose="chooseEstimate"
@@ -379,6 +497,17 @@
   }
   .chip:active {
     background: var(--colour-press);
+  }
+  /* Required before Accept: a dashed outline in the accept colour. */
+  .chip.needed {
+    color: var(--colour-accept);
+    border: 1px dashed var(--colour-accept);
+  }
+  .chip-prefix {
+    color: var(--colour-ink-muted);
+  }
+  .chip.overdue {
+    color: var(--colour-decline);
   }
   .dot {
     flex: none;

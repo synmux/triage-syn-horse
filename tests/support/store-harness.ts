@@ -21,18 +21,27 @@ export const myrStates = statesForTeam("team-myr", workspace.states);
 
 export const first = makeIssue({
   createdAt: "2026-09-27T10:00:00Z",
+  // Ready to accept: accepting needs a priority and an estimate.
+  estimate: 2,
   id: "issue-1",
   identifier: "MYR-1",
+  priority: 3,
 });
 export const second = makeIssue({
   createdAt: "2026-09-26T10:00:00Z",
+  // Ready to accept: accepting needs a priority and an estimate.
+  estimate: 2,
   id: "issue-2",
   identifier: "MYR-2",
+  priority: 3,
 });
 export const third = makeIssue({
   createdAt: "2026-09-25T10:00:00Z",
+  // Ready to accept: accepting needs a priority and an estimate.
+  estimate: 2,
   id: "issue-3",
   identifier: "MYR-3",
+  priority: 3,
 });
 
 export const baseHandlers = {

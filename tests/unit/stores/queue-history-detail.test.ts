@@ -162,7 +162,7 @@ describe("queue store", () => {
       queue.edit("issue-1", { priority: 1 }, { priority: 1 })
     ).resolves.toBe(false);
 
-    expect(queue.issueById("issue-1")?.priority).toBe(0);
+    expect(queue.issueById("issue-1")?.priority).toBe(3);
     expect(useToastStore().items.at(-1)?.message).toBe(
       "Linear did not confirm the change"
     );

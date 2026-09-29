@@ -101,6 +101,7 @@ export const makeIssue = (
   botActor: null,
   createdAt: "2026-09-20T10:00:00.000Z",
   creator: { avatarUrl: null, displayName: "syn", id: "user-syn" },
+  dueDate: null,
   estimate: null,
   externalUserCreator: null,
   id: "issue-1",

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { LinearGraphQLError, LinearNetworkError } from "~/lib/linear/errors";
 import {
+  AcceptBlockedError,
+  acceptBlockers,
+  describeAcceptBlockers,
   planAccept,
   planDecline,
   planDuplicate,
@@ -23,6 +26,8 @@ const workspace = makeWorkspace();
 const team = makeTeam();
 const teamStates = statesForTeam("team-myr", workspace.states);
 const issue = makeIssue();
+/** Has the priority and estimate that accepting requires. */
+const readyIssue = makeIssue({ estimate: 2, priority: 3 });
 
 const updateIssueOk = (variables: { id: string }) => ({
   issueUpdate: { issue: { ...issue, id: variables.id }, success: true },
@@ -46,7 +51,7 @@ const relationOk = (stateType: string) => () => ({
 
 describe("planAccept", () => {
   it("moves the issue to the team's default state and can undo back to triage", async () => {
-    const plan = planAccept(issue, team, teamStates);
+    const plan = planAccept(readyIssue, team, teamStates);
     const { calls, client } = createFakeClient({ UpdateIssue: updateIssueOk });
 
     const result = await executePlan(client, plan);
@@ -76,7 +81,7 @@ describe("planAccept", () => {
   });
 
   it("posts the comment before moving, and undo removes it again", async () => {
-    const plan = planAccept(issue, team, teamStates, {
+    const plan = planAccept(readyIssue, team, teamStates, {
       comment: "Good idea, doing it next.",
       stateId: "myr-scheduled",
     });
@@ -106,31 +111,51 @@ describe("planAccept", () => {
   });
 
   it("ignores a blank comment", () => {
-    const plan = planAccept(issue, team, teamStates, { comment: "   \n" });
+    const plan = planAccept(readyIssue, team, teamStates, { comment: "   \n" });
     expect(plan.steps.map((step) => step.kind)).toEqual(["updateIssue"]);
   });
 
   it("refuses a state that is not a valid acceptance target", () => {
     expect(() =>
-      planAccept(issue, team, teamStates, { stateId: "myr-done" })
+      planAccept(readyIssue, team, teamStates, { stateId: "myr-done" })
     ).toThrow("Done is not a state MYR-1 can be accepted into");
   });
 
-  it("refuses to accept without a priority when the team requires one", () => {
+  it("refuses to accept without a priority and an estimate", () => {
+    const attempt = () => planAccept(issue, team, teamStates);
+    expect(attempt).toThrow(AcceptBlockedError);
+    expect(attempt).toThrow(
+      "MYR-1 needs a priority and an estimate before it can be accepted"
+    );
+  });
+
+  it("names whichever of the two is missing", () => {
+    expect(() =>
+      planAccept(makeIssue({ priority: 2 }), team, teamStates)
+    ).toThrow("MYR-1 needs an estimate before it can be accepted");
+    expect(() =>
+      planAccept(makeIssue({ estimate: 3 }), team, teamStates)
+    ).toThrow("MYR-1 needs a priority before it can be accepted");
+  });
+
+  it("counts a zero estimate as an estimate", () => {
     expect(() =>
       planAccept(
-        issue,
-        makeTeam({ requirePriorityToLeaveTriage: true }),
-        teamStates
-      )
-    ).toThrow("MYR requires a priority before an issue leaves triage");
-    expect(() =>
-      planAccept(
-        makeIssue({ priority: 2 }),
-        makeTeam({ requirePriorityToLeaveTriage: true }),
+        makeIssue({ estimate: 0, priority: 4 }),
+        makeTeam({ issueEstimationAllowZero: true }),
         teamStates
       )
     ).not.toThrow();
+  });
+
+  it("only requires a priority in a team that doesn't use estimates", () => {
+    const noEstimates = makeTeam({ issueEstimationType: "notUsed" });
+    expect(() =>
+      planAccept(makeIssue({ priority: 1 }), noEstimates, teamStates)
+    ).not.toThrow();
+    expect(() => planAccept(issue, noEstimates, teamStates)).toThrow(
+      "MYR-1 needs a priority before it can be accepted"
+    );
   });
 });
 
@@ -327,7 +352,7 @@ describe("executePlan failures", () => {
     });
 
     await expect(
-      executePlan(client, planAccept(issue, team, teamStates))
+      executePlan(client, planAccept(readyIssue, team, teamStates))
     ).rejects.toThrow(
       "Couldn't accept MYR-1: Linear did not confirm the change"
     );
@@ -540,5 +565,24 @@ describe("a state change whose answer is lost", () => {
       "IssueState",
       "DeleteComment",
     ]);
+  });
+});
+
+describe("acceptBlockers", () => {
+  it("lists what an issue still needs before it can be accepted", () => {
+    expect(acceptBlockers(issue, team)).toEqual(["priority", "estimate"]);
+    expect(acceptBlockers(makeIssue({ priority: 2 }), team)).toEqual([
+      "estimate",
+    ]);
+    expect(acceptBlockers(readyIssue, team)).toEqual([]);
+  });
+});
+
+describe("describeAcceptBlockers", () => {
+  it("puts what is missing into words", () => {
+    expect(describeAcceptBlockers(["priority", "estimate"])).toBe(
+      "a priority and an estimate"
+    );
+    expect(describeAcceptBlockers(["estimate"])).toBe("an estimate");
   });
 });

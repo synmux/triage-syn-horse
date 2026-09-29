@@ -15,9 +15,14 @@
    * returns focus to whatever opened it.
    */
   const open = defineModel<boolean>("open", { required: true });
-  const { title } = defineProps<{ title: string }>();
+  const { description, title } = defineProps<{
+    title: string;
+    /** A line under the title, for example why the sheet opened. */
+    description?: string;
+  }>();
 
   const titleId = useId();
+  const descriptionId = useId();
   const panel = useTemplateRef<HTMLElement>("panel");
   const dragOffset = ref(0);
   let dragStartY: number | null = null;
@@ -120,6 +125,7 @@
           role="dialog"
           tabindex="-1"
           ref="panel"
+          :aria-describedby="description ? descriptionId : undefined"
           :aria-labelledby="titleId"
           :style="panelStyle"
         >
@@ -136,6 +142,9 @@
             <h2 :id="titleId">{{ title }}</h2>
             <IconButton icon="close" label="Close" @click="close" />
           </header>
+          <p class="description" v-if="description" :id="descriptionId">
+            {{ description }}
+          </p>
           <div class="content">
             <slot />
           </div>
@@ -198,6 +207,13 @@
   .header h2 {
     font-size: 1.2rem;
     font-weight: 700;
+  }
+  .description {
+    padding: 0 var(--gutter-end) var(--space-3) var(--gutter);
+    margin-top: calc(var(--space-2) * -1);
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--colour-accept);
   }
   .content {
     padding: 0 var(--gutter-end) var(--space-4) var(--gutter);

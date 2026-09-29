@@ -1,6 +1,6 @@
 # Triage
 
-An iPhone-first web app for triaging [Linear](https://linear.app) issues: accept, decline, mark as duplicate, snooze, and tidy up priority, estimate, labels, project and team, all from your phone. Every action can be undone.
+An iPhone-first web app for triaging [Linear](https://linear.app) issues: accept, decline, mark as duplicate, snooze, and tidy up status, priority, estimate, due date, labels, project and team, all from your phone. Every action can be undone.
 
 It runs entirely in your browser. There is no server holding your data: the app talks directly to Linear's API with a personal API key that stays on your device.
 
@@ -14,9 +14,10 @@ It runs entirely in your browser. There is no server holding your data: the app 
 ### Triage on the phone
 
 - **Queue**: every issue in a Triage state, across all your teams. Filter by team, switch to Snoozed, pull down to refresh.
-- **Swipe** a row right to accept it, left to decline it (or snooze it until tomorrow, in Settings).
+- **Swipe** a row right to accept it, left to decline it (or snooze it until tomorrow, in Settings). If the issue isn't ready to accept, swiping right opens it with the missing pickers instead.
 - **Start sorting** opens the first issue. The strip along the bottom holds the four outcomes: **Decline**, **Duplicate**, **Snooze** and **Accept** (the chevron picks another state or adds a comment). After each action the next issue opens.
-- Tap the property chips to set priority, estimate, labels, project, assignee or team; tap the title to rename.
+- Tap the property chips to set priority, estimate, due date, labels, project, assignee or team; tap the title to rename. The first chip, **Accept to …**, picks the status the issue moves into when you accept it (the team default until you change it).
+- **An issue needs a priority and an estimate before it can be accepted** (just a priority in teams that don't use estimates). Until then the missing chips are outlined and the Accept button says what it needs; tapping Accept opens each missing picker in turn, then you tap Accept once it's ready. Nothing is ever accepted on your behalf.
 - Every action shows an **Undo** toast, and **Recent** keeps the last 50 so you can undo later. Undo refuses if the issue has changed since, so it never overwrites other work.
 - With a keyboard: `1` accept, `2` decline, `3` duplicate, `H` snooze, `J`/`K` next/previous, `Esc` back.
 
