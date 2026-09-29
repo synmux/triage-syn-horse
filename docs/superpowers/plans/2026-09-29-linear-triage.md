@@ -322,3 +322,13 @@ Commit `✅ test(e2e): cover triage flows with intercepted mutations`.
 - Record decisions and API facts in Basic Memory.
 
 Commit(s) per change: `📝 docs: …`, `🚀 ci(deploy): …` as appropriate.
+
+---
+
+## Execution notes (2026-09-29)
+
+Executed natively in one session. Where the build departed from the plan:
+
+- **Tasks 1–17 done as planned**, with these changes: files are kebab-case (Ultracite rule); single-word components became `AppIcon` and `UserAvatar`; `useTriageActions` returns `{ planned, completion }` so the issue screen knows at once whether an action was refused; rate-limit headers are not CORS-exposed, so Settings shows no quota; `upgrade-insecure-requests` was dropped from the CSP because it hangs WebKit on an http preview; the PWA head links are static rather than injected by `<NuxtPwaAssets />`.
+- **Task 18 (E2E) is disabled.** Its runs wrote to the live Linear workspace: the production service worker claimed the page and Playwright's route interception stopped seeing requests. Ten of the eleven affected issues were restored by hand; SHS-167 (duplicate of MYR-319, whose GitHub attachment moved to MYR-319) still needs restoring. The suite stays skipped until the two guards in AGENTS.md ("E2E safety") exist. Mutation payloads are covered by unit tests instead.
+- **Task 19**: visual QA done in WebKit at iPhone 15 size in both colour schemes (queue, issue, all sheets, connect, settings) against a production build under the enforced CSP, with no console errors and no horizontal overflow. Deployment is prepared but not run; see README "Deploying".
