@@ -12,7 +12,8 @@ export interface StubbedRequest {
   variables: Record<string, unknown>;
 }
 
-type Handler = (variables: Record<string, unknown>) => unknown;
+// `never` lets each test type its handler's variables precisely.
+type Handler = (variables: never) => unknown;
 
 const operationNamePattern = /\b(?:query|mutation)\s+(\w+)/;
 
@@ -37,7 +38,7 @@ export function stubLinearFetch(handlers: Record<string, Handler>) {
       );
     }
     try {
-      return Response.json({ data: await handler(body.variables) });
+      return Response.json({ data: await handler(body.variables as never) });
     } catch (thrown) {
       if (thrown instanceof Response) {
         return thrown;
