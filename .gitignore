@@ -28,3 +28,6 @@ logs
 .dev.vars
 test-results
 playwright-report
+
+# TypeScript incremental build caches
+*.tsbuildinfo
