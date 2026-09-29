@@ -1,45 +1,64 @@
 # Triage
 
-An iPhone-first web app for triaging [Linear](https://linear.app) issues: accept, decline, mark as duplicate, snooze, and tidy up status, priority, estimate, due date, labels, project and team, all from your phone. Every action can be undone.
+Triage is an iPhone-first web app for triaging [Linear](https://linear.app) issues from your phone. You can accept, decline, snooze, or mark an issue as a duplicate and set its status, priority, estimate, due date, labels, project, and team. You can undo every action.
 
-It runs entirely in your browser. There is no server holding your data: the app talks directly to Linear's API with a personal API key that stays on your device.
+It runs entirely in your browser. No server holds your data, because the app talks to Linear's API directly with a personal API key that stays on your device.
 
-## Using it
+## Set it up
 
 1. Open the site in Safari on your iPhone.
-2. Tap **Share → Add to Home Screen**, then open **Triage** from your Home Screen.
-3. In Linear, go to **Settings → Security & access → Personal API keys**, create a key with **Read** and **Write** access, and copy it.
-4. Paste the key into the app. The Home Screen app keeps its own storage, so paste it there rather than in Safari.
+2. Tap **Share**, then **Add to Home Screen**, and open **Triage** from your Home Screen.
+3. In Linear, go to **Settings** > **Security & access** > **Personal API keys**.
+4. Create a key with **Read** and **Write** access, and copy it.
+5. Paste the key into the Home Screen app, which keeps its own storage apart from Safari's.
 
-### Triage on the phone
+## Triage your issues
 
-- **Queue**: every issue in a Triage state, across all your teams. Filter by team, switch to Snoozed, pull down to refresh.
-- **Swipe** a row right to accept it, left to decline it (or snooze it until tomorrow, in Settings). If the issue isn't ready to accept, swiping right opens it with the missing pickers instead.
-- **Start sorting** opens the first issue. The strip along the bottom holds the four outcomes: **Decline**, **Duplicate**, **Snooze** and **Accept** (the chevron picks another state or adds a comment). After each action the next issue opens.
-- Tap the property chips to set priority, estimate, due date, labels, project, assignee or team; tap the title to rename. The first chip, **Accept to …**, picks the status the issue moves into when you accept it (the team default until you change it).
-- **An issue needs a priority and an estimate before it can be accepted** (just a priority in teams that don't use estimates). Until then the missing chips are outlined and the Accept button says what it needs; tapping Accept opens each missing picker in turn, then you tap Accept once it's ready. Nothing is ever accepted on your behalf.
-- Every action shows an **Undo** toast, and **Recent** keeps the last 50 so you can undo later. Undo refuses if the issue has changed since, so it never overwrites other work.
-- With a keyboard: `1` accept, `2` decline, `3` duplicate, `H` snooze, `J`/`K` next/previous, `Esc` back.
+### The queue
 
-## Deploying
+The queue lists every issue in a Triage state across all your teams. You can filter it by team or switch to snoozed issues, and pulling down refreshes the list.
 
-The app is static files served by an assets-only Cloudflare Worker (`wrangler.jsonc`). From fish:
+Swipe a row right to accept the issue, or left to decline it. In Settings, you can make the left swipe snooze the issue until tomorrow instead. If an issue isn't ready to accept, a right swipe opens it with the pickers it still needs.
+
+Tap **Start sorting** to open the first issue.
+
+### An issue
+
+Use the strip along the bottom to decline, duplicate, snooze, or accept the issue. The chevron beside Accept picks another status or adds a comment. After each action, the next issue opens.
+
+Tap a property chip to set the priority, estimate, due date, labels, project, assignee, or team, and tap the title to rename the issue. The first chip, **Accept to**, sets the status that Accept moves the issue into. It offers the team's backlog, unstarted, and started statuses, never Triage, and shows the team default until you change it.
+
+### Accepting
+
+An issue needs a priority and an estimate before you can accept it. In a team that doesn't use estimates, it needs only a priority. Until the issue is ready, its missing chips are outlined and the Accept button says what it needs. Tapping Accept then opens each missing picker in turn, and you tap Accept again once the issue is ready. The app never accepts an issue for you.
+
+### Undo
+
+Every action shows an **Undo** toast, and **Recent** keeps the last 50 actions so you can undo them later. Undo refuses if the issue has changed since, so it never overwrites anyone else's work.
+
+### Keyboard shortcuts
+
+With a hardware keyboard, press `1` to accept, `2` to decline, `3` to mark as duplicate, `H` to snooze, `J` or `K` for the next or previous issue, and `Esc` to go back.
+
+## Deploy
+
+The app is a set of static files that an assets-only Cloudflare Worker serves, configured in `wrangler.jsonc`. From fish, deploy it with this command:
 
 ```fish
 env CLOUDFLARE_API_TOKEN=$__CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID=$__CLOUDFLARE_ACCOUNT_ID pnpm run deploy
 ```
 
-`pnpm run deploy` runs lint, typecheck and unit tests, builds, writes `_headers` (CSP and privacy headers), and deploys to `linear-triage.<your-subdomain>.workers.dev`. For a custom domain such as `triage.syn.as`, add a `routes` entry with `custom_domain: true` to `wrangler.jsonc`.
+`pnpm run deploy` runs `pnpm verify`, builds the app, and writes `_headers` with the Content Security Policy and privacy headers. It then deploys to `linear-triage.<your-subdomain>.workers.dev`. For a custom domain such as `triage.syn.as`, add a `routes` entry with `custom_domain: true` to `wrangler.jsonc`.
 
-## Developing
+## Develop
 
-Requires Node 24 LTS and pnpm 12.
+You need Node 24 LTS and pnpm 12.
 
 ```fish
 pnpm install
 pnpm dev
 ```
 
-`pnpm verify` runs lint, typecheck and the unit tests. `pnpm test:live` runs read-only contract tests against the real Linear API. The Playwright E2E suite is disabled; see "E2E safety" in [`AGENTS.md`](./AGENTS.md) before touching it.
+`pnpm verify` runs lint, typecheck, and the unit tests. `pnpm test:live` runs read-only contract tests against the real Linear API. The Playwright end-to-end suite is disabled; read "E2E safety" in [`AGENTS.md`](./AGENTS.md) before you touch it.
 
-See [`AGENTS.md`](./AGENTS.md) for the full command list, layout and rules, and `docs/superpowers/` for the design spec and implementation plan.
+[`AGENTS.md`](./AGENTS.md) lists the commands and the rules for working on the code, and `docs/superpowers/` holds the design spec and the implementation plan.
