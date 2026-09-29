@@ -8,6 +8,13 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: "en-GB" },
+      link: [
+        // Static, so iOS finds them when adding to the Home Screen.
+        { href: "/manifest.webmanifest", rel: "manifest" },
+        { href: "/apple-touch-icon-180x180.png", rel: "apple-touch-icon" },
+        { href: "/favicon.ico", rel: "icon", sizes: "48x48" },
+        { href: "/icon.svg", rel: "icon", type: "image/svg+xml" },
+      ],
       meta: [
         {
           content:
@@ -77,7 +84,8 @@ export default defineNuxtConfig({
     },
     pwaAssets: {
       config: true,
-      // Theme colours are set per colour scheme in app.head above.
+      // Head links and theme colours are set statically in app.head above.
+      includeHtmlHeadLinks: false,
       injectThemeColor: false,
       overrideManifestIcons: true,
     },

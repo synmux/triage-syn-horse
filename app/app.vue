@@ -5,7 +5,6 @@
 </script>
 
 <template>
-  <NuxtPwaAssets />
   <NuxtRouteAnnouncer />
   <NuxtPage />
   <ToastHost />

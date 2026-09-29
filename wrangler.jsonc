@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // An assets-only Worker: the app is static files; there is no server code.
+  "name": "linear-triage",
+  "compatibility_date": "2026-09-29",
+  "assets": {
+    "directory": "./.output/public",
+    // Every unknown path gets index.html so the client router can handle it.
+    "not_found_handling": "single-page-application"
+  },
+  "workers_dev": true,
+  "preview_urls": false
+}

@@ -13,6 +13,7 @@
     "fix": "ultracite fix",
     "format": "ultracite fix",
     "generate": "nuxt generate",
+    "postgenerate": "node scripts/generate-headers.ts .output/public",
     "postinstall": "nuxt prepare",
     "lint": "ultracite check",
     "preview": "wrangler dev --port 8788",
