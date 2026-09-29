@@ -57,7 +57,8 @@ app/components/     presentational components
 app/pages/          connect, queue (index), issue/[id], recent, settings
 graphql/            vendored Linear SDL
 scripts/            schema refresh, _headers generation
-tests/unit|live|e2e vitest unit, live read-only, Playwright
+tests/unit|live|e2e vitest unit (incl. mounted components), live read-only, Playwright (disabled)
+tests/support/      factories, fake client, fetch stub, store harness, read-only client
 ```
 
 ## Commits

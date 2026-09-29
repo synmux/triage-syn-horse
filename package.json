@@ -46,6 +46,7 @@
     "@types/node": "^24.19.0",
     "@vite-pwa/assets-generator": "^1.0.4",
     "@vite-pwa/nuxt": "^1.1.1",
+    "@vitejs/plugin-vue": "^6.0.9",
     "@vue/test-utils": "^2.5.1",
     "graphql": "^17.0.2",
     "happy-dom": "^20.14.5",
