@@ -121,6 +121,12 @@ describe("planAccept", () => {
     ).toThrow("Done is not a state MYR-1 can be accepted into");
   });
 
+  it("never accepts into Triage, even when asked to", () => {
+    expect(() =>
+      planAccept(readyIssue, team, teamStates, { stateId: "myr-triage" })
+    ).toThrow("Triage is not a state MYR-1 can be accepted into");
+  });
+
   it("refuses to accept without a priority and an estimate", () => {
     const attempt = () => planAccept(issue, team, teamStates);
     expect(attempt).toThrow(AcceptBlockedError);
