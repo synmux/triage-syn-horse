@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["ultracite/biome/core", "ultracite/biome/vue"],
+  "files": {
+    "includes": [
+      "!app/lib/linear/generated",
+      "!graphql",
+      "!**/.nuxt",
+      "!**/.output",
+      "!**/.wrangler",
+      "!test-results",
+      "!playwright-report"
+    ]
+  }
+}

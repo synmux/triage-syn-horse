@@ -1,0 +1,59 @@
+{
+  "name": "linear-triage",
+  "version": "0.1.0",
+  "private": true,
+  "description": "An iPhone-first web app for triaging Linear issues.",
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "check": "ultracite check",
+    "codegen": "graphql-codegen --config codegen.ts",
+    "deploy": "pnpm run verify && pnpm run generate && wrangler deploy",
+    "dev": "nuxt dev",
+    "fix": "ultracite fix",
+    "format": "ultracite fix",
+    "generate": "nuxt generate",
+    "postinstall": "nuxt prepare",
+    "lint": "ultracite check",
+    "preview": "wrangler dev --port 8788",
+    "schema:update": "node scripts/update-schema.ts",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "test:live": "vitest run --config vitest.live.config.ts",
+    "test:watch": "vitest",
+    "typecheck": "nuxt typecheck",
+    "verify": "pnpm run lint && pnpm run typecheck && pnpm run test"
+  },
+  "dependencies": {
+    "@pinia/nuxt": "^1.0.2",
+    "dompurify": "^3.4.16",
+    "markdown-it": "^15.0.2",
+    "nuxt": "^4.5.2",
+    "pinia": "^4.0.3",
+    "vue": "^3.5.43",
+    "vue-router": "^5.3.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.12",
+    "@graphql-codegen/cli": "^7.4.3",
+    "@graphql-codegen/client-preset": "^6.2.0",
+    "@nuxt/test-utils": "^4.3.2",
+    "@playwright/test": "^1.63.0",
+    "@types/markdown-it": "^14.2.0",
+    "@types/node": "^24.19.0",
+    "@vite-pwa/assets-generator": "^1.0.4",
+    "@vite-pwa/nuxt": "^1.1.1",
+    "@vue/test-utils": "^2.5.1",
+    "graphql": "^17.0.2",
+    "happy-dom": "^20.14.5",
+    "typescript": "~6.0.3",
+    "ultracite": "7.12.0",
+    "vitest": "^5.0.2",
+    "vue-tsc": "^3.3.11",
+    "wrangler": "^4.142.0"
+  },
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": "^24.11.0"
+  }
+}
