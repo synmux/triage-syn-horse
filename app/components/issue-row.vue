@@ -3,6 +3,7 @@
   import { sourceLabel } from "~/lib/format/text";
   import { formatShortDateTime, relativeAge } from "~/lib/format/time";
   import type { Label, Team, TriageIssue } from "~/lib/linear/types";
+  import { issuePath } from "~/lib/routes";
   import { estimateLabel } from "~/lib/triage/estimates";
   import { isSnoozed } from "~/lib/triage/queue";
 
@@ -46,7 +47,7 @@
   <NuxtLink
     class="issue-row"
     :style="{ '--team-colour': team?.color ?? 'var(--colour-line)' }"
-    :to="`/issue/${issue.id}`"
+    :to="issuePath(issue.id)"
   >
     <span aria-hidden="true" class="stripe" />
     <span class="top">

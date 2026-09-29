@@ -52,6 +52,9 @@
   });
 
   function onPointerDown(event: PointerEvent) {
+    // A drag that snapped back fires no click on iOS; never carry its
+    // suppression over to the next, genuine tap.
+    suppressNextClick = false;
     if (
       disabled ||
       !event.isPrimary ||

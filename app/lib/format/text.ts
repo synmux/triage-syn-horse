@@ -8,6 +8,27 @@ export interface TitleSegment {
 }
 
 const inlineCode = /`([^`]+)`/g;
+const whitespaceRun = /\s+/g;
+const allowedLinkProtocols = new Set(["http:", "https:"]);
+
+/** A title as Linear should store it: trimmed, whitespace collapsed. */
+export function normaliseTitle(raw: string): string {
+  const title = raw.replace(whitespaceRun, " ").trim();
+  if (!title) {
+    throw new Error("A title can't be empty");
+  }
+  return title;
+}
+
+/** The URL if it is a plain web link, otherwise null (never javascript: and friends). */
+export function safeExternalUrl(url: string): string | null {
+  try {
+    const parsed = new URL(url.trim());
+    return allowedLinkProtocols.has(parsed.protocol) ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Splits a title into plain and `inline code` segments, so the UI can

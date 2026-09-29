@@ -7,6 +7,7 @@
   import type { SwipeDirection } from "~/lib/gestures";
   import { describeError } from "~/lib/linear/errors";
   import type { Label, TriageIssue } from "~/lib/linear/types";
+  import { issuePath } from "~/lib/routes";
   import { usePreferencesStore } from "~/stores/preferences";
   import { useQueueStore } from "~/stores/queue";
   import { useSessionStore } from "~/stores/session";
@@ -166,7 +167,7 @@
     </main>
 
     <div class="start" v-if="firstIssue && !showSnoozed">
-      <NuxtLink class="start-button" :to="`/issue/${firstIssue.id}`">
+      <NuxtLink class="start-button" :to="issuePath(firstIssue.id)">
         Start sorting
         <span class="tabular start-count">{{ queue.visible.length }}</span>
       </NuxtLink>

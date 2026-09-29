@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { sourceLabel, titleSegments } from "~/lib/format/text";
+import {
+  normaliseTitle,
+  safeExternalUrl,
+  sourceLabel,
+  titleSegments,
+} from "~/lib/format/text";
 
 describe("titleSegments", () => {
   it("splits inline code out of a title", () => {
@@ -39,5 +44,35 @@ describe("sourceLabel", () => {
   it("falls back to a readable version of unknown names", () => {
     expect(sourceLabel("someNewThing")).toBe("Some new thing");
     expect(sourceLabel(null)).toBeNull();
+  });
+});
+
+describe("normaliseTitle", () => {
+  it("trims and collapses runs of whitespace, keeping every letter", () => {
+    expect(normaliseTitle("  Fix sessions  list\n\tnow  ")).toBe(
+      "Fix sessions list now"
+    );
+  });
+
+  it("refuses a title that is empty after trimming", () => {
+    expect(() => normaliseTitle(" \n ")).toThrow("A title can't be empty");
+  });
+});
+
+describe("safeExternalUrl", () => {
+  it("allows http and https links", () => {
+    expect(safeExternalUrl("https://github.com/synmux/myriad/issues/1")).toBe(
+      "https://github.com/synmux/myriad/issues/1"
+    );
+    expect(safeExternalUrl("http://example.com/a")).toBe(
+      "http://example.com/a"
+    );
+  });
+
+  it("rejects other schemes and garbage", () => {
+    expect(safeExternalUrl("javascript:alert(1)")).toBeNull();
+    expect(safeExternalUrl(" JavaScript:alert(1)")).toBeNull();
+    expect(safeExternalUrl("data:text/html,hi")).toBeNull();
+    expect(safeExternalUrl("not a url")).toBeNull();
   });
 });

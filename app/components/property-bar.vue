@@ -1,5 +1,6 @@
 <script lang="ts" setup>
   import { computed, ref } from "vue";
+  import { describeError } from "~/lib/linear/errors";
   import type {
     IssueUpdateInput,
     Label,
@@ -22,6 +23,7 @@
   } from "~/lib/triage/labels";
   import { priorities, priorityLabel } from "~/lib/triage/priorities";
   import { planTeamMove } from "~/lib/triage/team-move";
+  import { useToastStore } from "~/stores/toasts";
 
   /**
    * The issue's editable properties as a row of chips, each opening a
@@ -210,7 +212,13 @@
     if (!target || target.id === team.id) {
       return;
     }
-    const plan = planTeamMove(issue, target, workspace);
+    let plan: ReturnType<typeof planTeamMove>;
+    try {
+      plan = planTeamMove(issue, target, workspace);
+    } catch (failure) {
+      useToastStore().push({ message: describeError(failure), tone: "error" });
+      return;
+    }
     const optimistic: Partial<TriageIssue> = { team: { id: target.id } };
     if (plan.input.stateId) {
       optimistic.state = { id: plan.input.stateId };

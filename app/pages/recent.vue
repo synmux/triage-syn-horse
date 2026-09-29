@@ -1,6 +1,7 @@
 <script lang="ts" setup>
   import { useRouter } from "vue-router";
   import { formatFullDateTime, relativeAge } from "~/lib/format/time";
+  import { issuePath } from "~/lib/routes";
   import { type HistoryEntry, useHistoryStore } from "~/stores/history";
   import { useQueueStore } from "~/stores/queue";
 
@@ -48,7 +49,7 @@
           :class="entry.status"
         >
           <div class="entry-main">
-            <NuxtLink class="summary" :to="`/issue/${entry.issueId}`">{{
+            <NuxtLink class="summary" :to="issuePath(entry.issueId)">{{
               entry.summary
             }}</NuxtLink>
             <time

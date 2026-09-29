@@ -1,7 +1,9 @@
 <script lang="ts" setup>
   import { computed } from "vue";
+  import { safeExternalUrl } from "~/lib/format/text";
   import { relativeAge } from "~/lib/format/time";
   import type { IssueDetail } from "~/lib/linear/types";
+  import { issuePath } from "~/lib/routes";
   import { describeRelations, threadComments } from "~/lib/triage/activity";
 
   /** Attachments, relations and the comment thread under an issue. */
@@ -10,6 +12,13 @@
 
   const comments = computed(() => threadComments(detail.comments.nodes));
   const relations = computed(() => describeRelations(detail));
+  /** Only plain web links become clickable. */
+  const attachments = computed(() =>
+    detail.attachments.nodes.map((attachment) => ({
+      ...attachment,
+      href: safeExternalUrl(attachment.url),
+    }))
+  );
 
   const authorOf = (comment: IssueDetail["comments"]["nodes"][number]) => ({
     avatarUrl:
@@ -34,12 +43,13 @@
     <h2 class="block-title" id="attachments-heading">Links</h2>
     <!-- biome-ignore lint/a11y/noRedundantRoles: Safari drops list semantics when list-style is none. -->
     <ul class="items" role="list">
-      <li v-for="attachment in detail.attachments.nodes" :key="attachment.id">
-        <a
+      <li v-for="attachment in attachments" :key="attachment.id">
+        <component
           class="item"
-          rel="noopener noreferrer"
-          target="_blank"
-          :href="attachment.url"
+          :is="attachment.href ? 'a' : 'span'"
+          :href="attachment.href ?? undefined"
+          :rel="attachment.href ? 'noopener noreferrer' : undefined"
+          :target="attachment.href ? '_blank' : undefined"
         >
           <AppIcon name="paperclip" :size="18" />
           <span class="item-text">
@@ -48,8 +58,8 @@
               attachment.subtitle
             }}</span>
           </span>
-          <AppIcon name="external" :size="16" />
-        </a>
+          <AppIcon name="external" v-if="attachment.href" :size="16" />
+        </component>
       </li>
     </ul>
   </section>
@@ -63,7 +73,7 @@
     <!-- biome-ignore lint/a11y/noRedundantRoles: Safari drops list semantics when list-style is none. -->
     <ul class="items" role="list">
       <li v-for="relation in relations" :key="relation.id">
-        <NuxtLink class="item" :to="`/issue/${relation.issue.id}`">
+        <NuxtLink class="item" :to="issuePath(relation.issue.id)">
           <AppIcon name="link" :size="18" />
           <span class="item-text">
             <span class="item-hint"

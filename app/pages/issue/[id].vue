@@ -6,7 +6,7 @@
     type ActionHandle,
     useTriageActions,
   } from "~/composables/use-triage-actions";
-  import { sourceLabel } from "~/lib/format/text";
+  import { normaliseTitle, sourceLabel } from "~/lib/format/text";
   import {
     formatFullDateTime,
     formatShortDateTime,
@@ -14,6 +14,7 @@
   } from "~/lib/format/time";
   import { describeError } from "~/lib/linear/errors";
   import type { IssueUpdateInput, TriageIssue } from "~/lib/linear/types";
+  import { issuePath } from "~/lib/routes";
   import type { StripAction } from "~/lib/triage/actions";
   import { isSnoozed, neighbours, nextAfterRemoval } from "~/lib/triage/queue";
   import { acceptState, acceptTargets } from "~/lib/triage/states";
@@ -125,7 +126,7 @@
     tearing.value = kind;
     await pause(reducedMotion() ? 0 : 320);
     if (preferences.values.autoAdvance && next) {
-      await router.replace("/issue/$next");
+      await router.replace(issuePath(next));
     } else {
       await router.push("/");
     }
@@ -178,7 +179,13 @@
 
   async function saveTitle(title: string): Promise<boolean> {
     const current = issue.value;
-    const trimmed = title.trim().replace(/s+/g, " ");
+    let trimmed: string;
+    try {
+      trimmed = normaliseTitle(title);
+    } catch (failure) {
+      toasts.push({ message: describeError(failure), tone: "error" });
+      return false;
+    }
     if (!current || trimmed === current.title) {
       return true;
     }
@@ -206,7 +213,7 @@
 
   function go(targetId: string | null) {
     if (targetId) {
-      router.replace("/issue/$targetId");
+      router.replace(issuePath(targetId));
     }
   }
 
