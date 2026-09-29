@@ -46,6 +46,9 @@ export type ActionKind =
   | "snooze"
   | "unsnooze";
 
+/** The four outcomes on the issue screen's action strip. */
+export type StripAction = Exclude<ActionKind, "unsnooze">;
+
 /** How the issue must still look for an undo to be safe. */
 export interface Expectation {
   snoozedUntilAt?: string | null;

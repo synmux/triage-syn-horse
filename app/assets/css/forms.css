@@ -1,0 +1,81 @@
+/*
+ * Shared form pieces used inside bottom sheets: labels, text fields,
+ * explanatory copy and the confirm buttons in each outcome colour.
+ */
+.field-label {
+  display: block;
+  padding: 0;
+  margin-bottom: var(--space-2);
+  font-weight: 650;
+}
+
+.text-field {
+  display: block;
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--space-3);
+  line-height: 1.4;
+  color: var(--colour-ink);
+  resize: vertical;
+  outline: none;
+  background: var(--colour-surface-raised);
+  border: 1px solid var(--colour-line);
+  border-radius: var(--radius-medium);
+}
+
+.text-field:focus {
+  border-color: var(--colour-focus);
+}
+
+.explain {
+  margin-bottom: var(--space-4);
+  font-size: 0.94rem;
+  color: var(--colour-ink-muted);
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: var(--colour-ink-muted);
+}
+
+.field-error {
+  min-height: 1.4em;
+  margin-top: var(--space-2);
+  font-size: 0.9rem;
+  color: var(--colour-decline);
+}
+
+.confirm {
+  flex: 1;
+  min-height: 3rem;
+  padding: 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 700;
+  border-radius: var(--radius-medium);
+}
+
+.confirm.accept {
+  color: var(--colour-accept-on-fill);
+  background: var(--colour-accept-fill);
+}
+
+.confirm.decline {
+  color: #ffffff;
+  background: var(--colour-decline-solid);
+}
+
+.confirm.snooze {
+  color: #2b1a00;
+  background: var(--colour-snooze-fill);
+}
+
+.confirm.duplicate {
+  color: #ffffff;
+  background: #5b4ccf;
+}
+
+.confirm.neutral {
+  color: var(--colour-canvas);
+  background: var(--colour-ink);
+}

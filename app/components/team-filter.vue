@@ -50,7 +50,9 @@
 </template>
 
 <style scoped>
+  /* Positioned so absolutely positioned descendants cannot widen the page. */
   .filters {
+    position: relative;
     display: flex;
     gap: var(--space-2);
     padding: var(--space-1) var(--gutter-end) var(--space-3) var(--gutter);

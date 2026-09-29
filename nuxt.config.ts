@@ -44,7 +44,11 @@ export default defineNuxtConfig({
     },
   },
   compatibilityDate: "2026-09-29",
-  css: ["~/assets/css/tokens.css", "~/assets/css/base.css"],
+  css: [
+    "~/assets/css/tokens.css",
+    "~/assets/css/base.css",
+    "~/assets/css/forms.css",
+  ],
   devtools: { enabled: false },
   hooks: {
     // A client-only app needs just the shell (index.html, 200.html, 404.html).

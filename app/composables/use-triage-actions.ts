@@ -19,6 +19,13 @@ import { useSessionStore } from "~/stores/session";
 import { useToastStore } from "~/stores/toasts";
 import { useWorkspaceStore } from "~/stores/workspace";
 
+export interface ActionHandle {
+  /** Resolves to true once Linear accepted the action. */
+  completion: Promise<boolean>;
+  /** False when the action was refused before anything was sent. */
+  planned: boolean;
+}
+
 export function useTriageActions() {
   const workspace = useWorkspaceStore();
   const session = useSessionStore();
@@ -44,16 +51,20 @@ export function useTriageActions() {
     return session.viewerId;
   };
 
-  /** Plans and performs an action; resolves to true once Linear accepted it. */
-  function run(build: () => ActionPlan): Promise<boolean> {
+  /**
+   * Plans an action and, if planning succeeded, performs it. `planned`
+   * is known at once, so the UI can move on; `completion` resolves to
+   * true once Linear accepted the action.
+   */
+  function run(build: () => ActionPlan): ActionHandle {
     let plan: ActionPlan;
     try {
       plan = build();
     } catch (failure) {
       toasts.push({ message: describeError(failure), tone: "error" });
-      return Promise.resolve(false);
+      return { completion: Promise.resolve(false), planned: false };
     }
-    return queue.perform(plan);
+    return { completion: queue.perform(plan), planned: true };
   }
 
   return {

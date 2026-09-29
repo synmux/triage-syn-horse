@@ -1,0 +1,385 @@
+<script lang="ts" setup>
+  import { computed, ref } from "vue";
+  import type {
+    IssueUpdateInput,
+    Label,
+    Project,
+    Team,
+    TriageIssue,
+    User,
+    WorkspaceSnapshot,
+  } from "~/lib/linear/types";
+  import type { PickerSection } from "~/lib/picker";
+  import {
+    estimateLabel,
+    estimateOptions,
+    estimationEnabled,
+  } from "~/lib/triage/estimates";
+  import {
+    assignableLabels,
+    labelDelta,
+    toggleLabel,
+  } from "~/lib/triage/labels";
+  import { priorities, priorityLabel } from "~/lib/triage/priorities";
+  import { planTeamMove } from "~/lib/triage/team-move";
+
+  /**
+   * The issue's editable properties as a row of chips, each opening a
+   * picker. Emits the Linear input to send, the optimistic patch to show
+   * at once, and any warnings the change produced.
+   */
+  const { issue, labels, projects, team, teams, users, workspace } =
+    defineProps<{
+      issue: TriageIssue;
+      team: Team;
+      teams: Team[];
+      labels: Label[];
+      projects: Project[];
+      users: User[];
+      workspace: WorkspaceSnapshot;
+    }>();
+  const emit = defineEmits<{
+    update: [
+      input: IssueUpdateInput,
+      optimistic: Partial<TriageIssue>,
+      warnings: string[],
+    ];
+  }>();
+
+  type Picker =
+    | "priority"
+    | "estimate"
+    | "labels"
+    | "project"
+    | "assignee"
+    | "team";
+  const openPicker = ref<Picker | null>(null);
+  const pickerOpen = (picker: Picker) =>
+    computed({
+      get: () => openPicker.value === picker,
+      set: (value: boolean) => {
+        openPicker.value = value ? picker : null;
+      },
+    });
+  const priorityOpen = pickerOpen("priority");
+  const estimateOpen = pickerOpen("estimate");
+  const labelsOpen = pickerOpen("labels");
+  const projectOpen = pickerOpen("project");
+  const assigneeOpen = pickerOpen("assignee");
+  const teamOpen = pickerOpen("team");
+
+  const noneId = "none";
+  const selectedLabelIds = computed(() =>
+    issue.labels.nodes.map(({ id }) => id)
+  );
+  const selectedLabels = computed(() =>
+    selectedLabelIds.value
+      .map((labelId) => labels.find((label) => label.id === labelId))
+      .filter((label): label is Label => label !== undefined)
+  );
+  const project = computed(() =>
+    projects.find((candidate) => candidate.id === issue.project?.id)
+  );
+  const assignee = computed(() =>
+    users.find((user) => user.id === issue.assignee?.id)
+  );
+  const estimate = computed(() => estimateLabel(team, issue.estimate));
+
+  const priorityChoices: PickerSection[] = [
+    {
+      options: priorities.map((priority) => ({
+        id: String(priority.value),
+        label: priority.label,
+        priority: priority.value,
+      })),
+      title: null,
+    },
+  ];
+  const estimateChoices = computed<PickerSection[]>(() => [
+    {
+      options: [
+        { icon: "close" as const, id: noneId, label: "No estimate" },
+        ...estimateOptions(team).map((option) => ({
+          icon: "estimate" as const,
+          id: String(option.value),
+          label: option.label,
+        })),
+      ],
+      title: null,
+    },
+  ]);
+  const labelChoices = computed<PickerSection[]>(() =>
+    assignableLabels(team.id, labels).map((section) => ({
+      options: section.labels.map((label) => ({
+        colour: label.color,
+        id: label.id,
+        label: label.name,
+      })),
+      title: section.group?.name ?? null,
+    }))
+  );
+  const projectChoices = computed<PickerSection[]>(() => [
+    {
+      options: [
+        { icon: "close" as const, id: noneId, label: "No project" },
+        ...projects.map((candidate) => ({
+          colour: candidate.color,
+          id: candidate.id,
+          label: candidate.name,
+        })),
+      ],
+      title: null,
+    },
+  ]);
+  const assigneeChoices = computed<PickerSection[]>(() => [
+    {
+      options: [
+        { icon: "user" as const, id: noneId, label: "Unassigned" },
+        ...users.map((user) => ({
+          avatarUrl: user.avatarUrl,
+          id: user.id,
+          label: user.isMe ? `${user.displayName} (you)` : user.displayName,
+        })),
+      ],
+      title: null,
+    },
+  ]);
+  const teamChoices = computed<PickerSection[]>(() => [
+    {
+      options: teams.map((candidate) => ({
+        colour: candidate.color,
+        hint: candidate.id === team.id ? "Current team" : candidate.name,
+        id: candidate.id,
+        label: candidate.key,
+      })),
+      title: null,
+    },
+  ]);
+
+  function choosePriority(id: string) {
+    const priority = Number(id);
+    if (priority !== issue.priority) {
+      emit("update", { priority }, { priority }, []);
+    }
+  }
+
+  function chooseEstimate(id: string) {
+    const value = id === noneId ? null : Number(id);
+    if (value !== issue.estimate) {
+      emit("update", { estimate: value }, { estimate: value }, []);
+    }
+  }
+
+  function toggleIssueLabel(labelId: string) {
+    const next = toggleLabel(selectedLabelIds.value, labelId, labels);
+    const delta = labelDelta(selectedLabelIds.value, next);
+    emit(
+      "update",
+      delta,
+      { labels: { nodes: next.map((id) => ({ id })) } },
+      []
+    );
+  }
+
+  function chooseProject(id: string) {
+    const projectId = id === noneId ? null : id;
+    if (projectId !== (issue.project?.id ?? null)) {
+      emit(
+        "update",
+        { projectId },
+        { project: projectId ? { id: projectId } : null },
+        []
+      );
+    }
+  }
+
+  function chooseAssignee(id: string) {
+    const assigneeId = id === noneId ? null : id;
+    if (assigneeId !== (issue.assignee?.id ?? null)) {
+      emit(
+        "update",
+        { assigneeId },
+        { assignee: assigneeId ? { id: assigneeId } : null },
+        []
+      );
+    }
+  }
+
+  function chooseTeam(id: string) {
+    const target = teams.find((candidate) => candidate.id === id);
+    if (!target || target.id === team.id) {
+      return;
+    }
+    const plan = planTeamMove(issue, target, workspace);
+    const optimistic: Partial<TriageIssue> = { team: { id: target.id } };
+    if (plan.input.stateId) {
+      optimistic.state = { id: plan.input.stateId };
+    }
+    if (plan.input.labelIds) {
+      optimistic.labels = {
+        nodes: plan.input.labelIds.map((labelId) => ({ id: labelId })),
+      };
+    }
+    if (plan.input.projectId === null) {
+      optimistic.project = null;
+    }
+    emit("update", plan.input, optimistic, plan.warnings);
+  }
+</script>
+
+<template>
+  <div class="properties">
+    <div class="property-bar">
+      <button class="chip" type="button" @click="openPicker = 'priority'">
+        <PriorityIcon :priority="issue.priority" />
+        {{ issue.priority === 0 ? "Priority" : priorityLabel(issue.priority) }}
+      </button>
+      <button
+        class="chip"
+        type="button"
+        v-if="estimationEnabled(team)"
+        @click="openPicker = 'estimate'"
+      >
+        <AppIcon name="estimate" :size="16" />
+        <span :class="{ tabular: estimate }">{{ estimate ?? "Estimate" }}</span>
+      </button>
+      <button class="chip" type="button" @click="openPicker = 'labels'">
+        <template v-if="selectedLabels.length === 0">
+          <AppIcon name="label" :size="16" />
+          Labels
+        </template>
+        <template v-else>
+          <span
+            aria-hidden="true"
+            class="dot"
+            v-for="label in selectedLabels.slice(0, 3)"
+            :key="label.id"
+            :style="{ background: label.color }"
+          />
+          {{
+            selectedLabels.length === 1 ? selectedLabels[0]?.name : `${selectedLabels.length} labels`
+          }}
+        </template>
+      </button>
+      <button class="chip" type="button" @click="openPicker = 'project'">
+        <AppIcon name="project" :size="16" />
+        <IssueTitle v-if="project" :title="project.name" />
+        <template v-else>Project</template>
+      </button>
+      <button class="chip" type="button" @click="openPicker = 'assignee'">
+        <UserAvatar
+          v-if="assignee"
+          :name="assignee.displayName"
+          :size="18"
+          :url="assignee.avatarUrl"
+        />
+        <AppIcon name="user" v-else :size="16" />
+        {{ assignee?.displayName ?? "Assignee" }}
+      </button>
+      <button class="chip" type="button" @click="openPicker = 'team'">
+        <span
+          aria-hidden="true"
+          class="dot"
+          :style="{ background: team.color ?? 'var(--colour-line)' }"
+        />
+        <span class="visually-hidden">Team </span>{{ team.key }}
+      </button>
+    </div>
+
+    <OptionSheet
+      title="Priority"
+      v-model:open="priorityOpen"
+      :sections="priorityChoices"
+      :selected="[String(issue.priority)]"
+      @choose="choosePriority"
+    />
+    <OptionSheet
+      title="Estimate"
+      v-model:open="estimateOpen"
+      :sections="estimateChoices"
+      :selected="[issue.estimate === null ? noneId : String(issue.estimate)]"
+      @choose="chooseEstimate"
+    />
+    <OptionSheet
+      multiple
+      searchable
+      title="Labels"
+      v-model:open="labelsOpen"
+      :sections="labelChoices"
+      :selected="selectedLabelIds"
+      @choose="toggleIssueLabel"
+    />
+    <OptionSheet
+      searchable
+      title="Project"
+      v-model:open="projectOpen"
+      :sections="projectChoices"
+      :selected="[issue.project?.id ?? noneId]"
+      @choose="chooseProject"
+    />
+    <OptionSheet
+      title="Assignee"
+      v-model:open="assigneeOpen"
+      :sections="assigneeChoices"
+      :selected="[issue.assignee?.id ?? noneId]"
+      @choose="chooseAssignee"
+    />
+    <OptionSheet
+      title="Move to team"
+      v-model:open="teamOpen"
+      :sections="teamChoices"
+      :selected="[team.id]"
+      @choose="chooseTeam"
+    />
+  </div>
+</template>
+
+<style scoped>
+  .properties {
+    min-width: 0;
+  }
+  /* Positioned so visually hidden text inside chips cannot widen the page. */
+  .property-bar {
+    position: relative;
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--gutter-end) var(--space-2) var(--gutter);
+    margin: 0 calc(-1 * var(--gutter-end)) 0 calc(-1 * var(--gutter));
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+  }
+  .property-bar::-webkit-scrollbar {
+    display: none;
+  }
+  .chip {
+    display: inline-flex;
+    flex: none;
+    gap: 0.4rem;
+    align-items: center;
+    max-width: 14rem;
+    min-height: 2.35rem;
+    padding: 0 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.9rem;
+    font-weight: 560;
+    white-space: nowrap;
+    background: var(--colour-surface);
+    border: 1px solid var(--colour-line);
+    border-radius: var(--radius-pill);
+  }
+  .chip:active {
+    background: var(--colour-press);
+  }
+  .dot {
+    flex: none;
+    width: 0.6rem;
+    height: 0.6rem;
+    border-radius: 50%;
+  }
+  .dot + .dot {
+    margin-left: -0.55rem;
+    box-shadow: 0 0 0 2px var(--colour-surface);
+  }
+</style>

@@ -51,7 +51,10 @@ describe("useTriageActions", () => {
   it("accepts into the team's default state", async () => {
     const { requests } = await setUp();
 
-    await expect(useTriageActions().accept(issue)).resolves.toBe(true);
+    const handle = useTriageActions().accept(issue);
+
+    expect(handle.planned).toBe(true);
+    await expect(handle.completion).resolves.toBe(true);
 
     expect(requests.at(-1)?.variables).toEqual({
       id: "issue-1",
@@ -66,7 +69,7 @@ describe("useTriageActions", () => {
     });
     const { requests } = await setUp();
 
-    await useTriageActions().snoozeUntilTomorrow(issue);
+    await useTriageActions().snoozeUntilTomorrow(issue).completion;
 
     expect(requests.at(-1)?.variables).toEqual({
       id: "issue-1",
@@ -82,12 +85,13 @@ describe("useTriageActions", () => {
     const { requests } = await setUp();
     const before = requests.length;
 
-    await expect(
-      useTriageActions().duplicate(issue, {
-        id: issue.id,
-        identifier: issue.identifier,
-      })
-    ).resolves.toBe(false);
+    const handle = useTriageActions().duplicate(issue, {
+      id: issue.id,
+      identifier: issue.identifier,
+    });
+
+    expect(handle.planned).toBe(false);
+    await expect(handle.completion).resolves.toBe(false);
 
     expect(requests).toHaveLength(before);
     expect(useToastStore().items.at(-1)).toMatchObject({
@@ -104,7 +108,7 @@ describe("useTriageActions", () => {
       team: { id: "team-unknown" },
     });
 
-    await expect(useTriageActions().decline(stranger)).resolves.toBe(false);
+    expect(useTriageActions().decline(stranger).planned).toBe(false);
 
     expect(useToastStore().items.at(-1)?.message).toBe(
       "The team for ZZZ-1 has not loaded yet. Try again in a moment."
