@@ -1,0 +1,10 @@
+[env]
+TRIAGE_SYN_HORSE_MISE_ACTIVE = 'true'
+V0_API_KEY = ''
+TMPDIR = '/tmp'
+
+[tools]
+node = { version = '24.21.0' }
+
+[tasks]
+claude = 'npx --yes @anthropic-ai/claude-code@latest'
