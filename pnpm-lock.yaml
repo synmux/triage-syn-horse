@@ -240,8 +240,8 @@ importers:
         specifier: ~7.0.2
         version: 7.0.2
       ultracite:
-        specifier: 7.12.1
-        version: 7.12.1(@biomejs/biome@2.5.14)
+        specifier: 7.12.2
+        version: 7.12.2(@biomejs/biome@2.5.14)
       vite-plugin-pwa:
         specifier: 1.3.0
         version: 1.3.0(@vite-pwa/assets-generator@2.0.0(@types/node@26.6.3))(supports-color@10.2.2)(vite@8.3.1(@types/node@26.6.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.1))(workbox-build@7.4.1(supports-color@10.2.2))(workbox-window@7.4.1)
@@ -5849,14 +5849,14 @@ packages:
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
-  ultracite@7.12.1:
-    resolution: {integrity: sha512-hXXAMtRIA1tSi3/D+v9cDw07SWz8HB7OsDRn1a8r2dSDZoVgCQIxuD4Bg2FkUiwHHZgQ7UHjCsLbwJqK8JoGcA==}
+  ultracite@7.12.2:
+    resolution: {integrity: sha512-0FQE7EuVFnX1FjtlIBklkfBTiZ5bJxknXSxcsjKos5Y73FlkasubWH7uVLS8jgOAI204B7xaIq+buE3vUybuwQ==}
     hasBin: true
     peerDependencies:
       '@biomejs/biome': ^2.5.0
       eslint: ^10.0.0
-      oxfmt: '>=0.40.0'
-      oxlint: ^1.79.0
+      oxfmt: '>=0.59.0'
+      oxlint: ^1.82.0
       prettier: ^3.0.0
       stylelint: ^17.0.0
     peerDependenciesMeta:
@@ -12801,7 +12801,7 @@ snapshots:
 
   ufo@1.6.4: {}
 
-  ultracite@7.12.1(@biomejs/biome@2.5.14):
+  ultracite@7.12.2(@biomejs/biome@2.5.14):
     dependencies:
       '@clack/prompts': 1.8.1
       cli-truncate: 6.1.1
