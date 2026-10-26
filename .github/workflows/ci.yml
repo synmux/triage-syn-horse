@@ -12,10 +12,10 @@ jobs:
       - uses: pnpm/setup@fa36a5ef7dcdefc3a7cb25655c122e00cf6e636e # v3.1.2
         # nb: runs `pnpm install` itself, no need for a separate install step
         with:
-          runtime: node@24
+          runtime: node@26
           cache: true
-      - name: trunk
-        uses: trunk-io/trunk-action@e1234e67a86010d61ddac8d8ebf4b783e2ffd2fa # v2.0.0
+      - name: lint
+        run: pnpm run lint
       - name: verify
         run: pnpm run verify
       - name: build
