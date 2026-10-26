@@ -32,7 +32,7 @@ import {
 } from "../support/read-only-client";
 
 const apiKey = process.env.LINEAR_API_KEY ?? process.env.__LINEAR_API_KEY;
-const uploadUrlPattern = /https:\/\/uploads\.linear\.app\/[^\s)"']+/g;
+const uploadUrlPattern = /https:\/\/uploads\.linear\.app\/[^\s)"']+/gu;
 
 describe.skipIf(!apiKey)("live Linear API (read-only)", () => {
   const client = createReadOnlyClient(

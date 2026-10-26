@@ -1,5 +1,5 @@
-const bearerPrefix = /^bearer\s+/i;
-const whitespace = /\s/;
+const bearerPrefix = /^bearer\s+/iu;
+const whitespace = /\s/u;
 
 /**
  * Cleans up a pasted Linear API key: surrounding whitespace and a

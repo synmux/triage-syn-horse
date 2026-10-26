@@ -7,8 +7,8 @@ export interface TitleSegment {
   text: string;
 }
 
-const inlineCode = /`([^`]+)`/g;
-const whitespaceRun = /\s+/g;
+const inlineCode = /`(?<code>[^`]+)`/gu;
+const whitespaceRun = /\s+/gu;
 const allowedLinkProtocols = new Set(["http:", "https:"]);
 
 /** A title as Linear should store it: trimmed, whitespace collapsed. */
@@ -38,7 +38,8 @@ export function titleSegments(title: string): TitleSegment[] {
   const segments: TitleSegment[] = [];
   let cursor = 0;
   for (const match of title.matchAll(inlineCode)) {
-    const [whole, code] = match;
+    const [whole] = match;
+    const code = match.groups?.code;
     if (match.index > cursor) {
       segments.push({ code: false, text: title.slice(cursor, match.index) });
     }
@@ -70,7 +71,7 @@ const knownSources: Record<string, string> = {
   zendesk: "Zendesk",
 };
 
-const wordBoundary = /([a-z])([A-Z])/g;
+const wordBoundary = /(?<lower>[a-z])(?<upper>[A-Z])/gu;
 
 /** A readable name for the integration that created an issue. */
 export function sourceLabel(service: string | null): string | null {
@@ -81,6 +82,8 @@ export function sourceLabel(service: string | null): string | null {
   if (known) {
     return known;
   }
-  const words = service.replace(wordBoundary, "$1 $2").toLowerCase();
+  const words = service
+    .replace(wordBoundary, "$<lower> $<upper>")
+    .toLowerCase();
   return words.charAt(0).toUpperCase() + words.slice(1);
 }

@@ -247,11 +247,9 @@
   .sheet-leave-to .panel {
     transform: translateY(100%);
   }
-</style>
 
-<style>
-  html.sheet-open,
-  html.sheet-open body {
+  :global(html.sheet-open),
+  :global(html.sheet-open body) {
     overflow: hidden;
   }
 </style>

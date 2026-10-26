@@ -19,7 +19,7 @@ import {
   updated,
 } from "../../support/store-harness";
 
-const issueDetailPattern = /IssueDetail/;
+const issueDetailPattern = /IssueDetail/u;
 
 beforeEach(() => {
   localStorage.clear();

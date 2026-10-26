@@ -18,7 +18,7 @@ const markdown = new MarkdownIt({
 markdown.renderer.rules.table_open = () => '<div class="md-scroll"><table>';
 markdown.renderer.rules.table_close = () => "</table></div>";
 
-const taskMarker = /^\[( |x|X)\] /;
+const taskMarker = /^\[(?<mark>[ xX])\] /u;
 
 // Linear writes task lists as "- [ ] item"; show them as ballot boxes.
 markdown.core.ruler.after("inline", "task-markers", (state) => {
@@ -33,7 +33,7 @@ markdown.core.ruler.after("inline", "task-markers", (state) => {
     const match =
       firstChild?.type === "text" ? taskMarker.exec(firstChild.content) : null;
     if (firstChild && match) {
-      const box = match[1] === " " ? "☐" : "☑";
+      const box = match.groups?.mark === " " ? "☐" : "☑";
       firstChild.content = `${box} ${firstChild.content.slice(match[0].length)}`;
     }
   }

@@ -3,3 +3,4 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - wrangler@4.143.0
+  - ultracite@8.1.0

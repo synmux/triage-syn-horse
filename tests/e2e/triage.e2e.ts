@@ -20,11 +20,11 @@ test.skip(
 );
 test.skip(!apiKey, "Set LINEAR_API_KEY to run the E2E suite (read-only).");
 
-const issueIdPattern = /\/issue\/([^/?#]+)/;
-const tomorrowButton = /^Tomorrow/;
-const markDuplicateButton = /^Mark as duplicate of/;
-const labelsChip = /Labels|labels?$/;
-const queueUrl = /\/$/;
+const issueIdPattern = /\/issue\/(?<issueId>[^/?#]+)/u;
+const tomorrowButton = /^Tomorrow/u;
+const markDuplicateButton = /^Mark as duplicate of/u;
+const labelsChip = /Labels|labels?$/u;
+const queueUrl = /\/$/u;
 
 async function openQueue(page: Page) {
   await page.goto("/");
@@ -37,7 +37,7 @@ async function openQueue(page: Page) {
 async function openFirstIssue(page: Page, linear: LinearHarness) {
   await openQueue(page);
   const href = await page.locator("a.issue-row").first().getAttribute("href");
-  const issueId = issueIdPattern.exec(href ?? "")?.[1];
+  const issueId = issueIdPattern.exec(href ?? "")?.groups?.issueId;
   const issue = issueId ? linear.issues.get(issueId) : undefined;
   if (!issue) {
     throw new Error("The harness did not see the first issue in the queue");
@@ -93,7 +93,7 @@ test("accepts an issue with one tap and moves on to the next", async ({
       input: { stateId: linear.stateId(issue, "Backlog") },
     },
   });
-  await expect(page).not.toHaveURL(new RegExp(issue.id));
+  await expect(page).not.toHaveURL(new RegExp(issue.id, "u"));
   await expect(
     page.getByText(`Accepted ${issue.identifier} into Backlog`)
   ).toBeVisible();

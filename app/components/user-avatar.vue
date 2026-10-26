@@ -32,7 +32,11 @@
     aria-hidden="true"
     class="avatar fallback"
     v-else
-    :style="{ fontSize: `${size * 0.5}px`, height: `${size}px`, width: `${size}px` }"
+    :style="{
+      fontSize: `${size * 0.5}px`,
+      height: `${size}px`,
+      width: `${size}px`,
+    }"
     >{{
       initial
     }}</span

@@ -183,7 +183,11 @@
     overflow: hidden;
     touch-action: pan-y;
     -webkit-user-select: none;
-    user-select: none;
+  }
+  @supports (user-select: none) {
+    .swipe-row {
+      user-select: none;
+    }
   }
   .surface {
     position: relative;

@@ -10,7 +10,12 @@
 <template>
   <main class="error-page">
     <EmptyState
-      :message="missing ? 'This link does not match anything in Triage.' : nuxtError.message || 'Something went wrong while showing this screen.'"
+      :message="
+        missing
+          ? 'This link does not match anything in Triage.'
+          : nuxtError.message ||
+            'Something went wrong while showing this screen.'
+      "
       :title="missing ? 'There is nothing here' : 'Triage hit a problem'"
     >
       <button class="home" type="button" @click="clearError({ redirect: '/' })">

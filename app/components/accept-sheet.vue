@@ -84,7 +84,11 @@
   .state input {
     width: 1.2rem;
     height: 1.2rem;
-    accent-color: var(--colour-accept-fill);
+  }
+  @supports (accent-color: auto) {
+    .state input {
+      accent-color: var(--colour-accept-fill);
+    }
   }
   .dot {
     width: 0.65rem;

@@ -16,11 +16,16 @@
   padding: var(--space-3);
   line-height: 1.4;
   color: var(--colour-ink);
-  resize: vertical;
   outline: none;
   background: var(--colour-surface-raised);
   border: 1px solid var(--colour-line);
   border-radius: var(--radius-medium);
+}
+
+@supports (resize: vertical) {
+  .text-field {
+    resize: vertical;
+  }
 }
 
 .text-field:focus {

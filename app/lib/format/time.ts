@@ -41,19 +41,17 @@ const dueDateOtherYear = new Intl.DateTimeFormat("en-GB", {
   year: "numeric",
 });
 
-const calendarDatePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+const calendarDatePattern = /^(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})$/u;
 
 /** A Linear due date ("YYYY-MM-DD", no time zone) as a local calendar date. */
 function calendarDate(value: string): Date | null {
-  const match = calendarDatePattern.exec(value);
-  if (!match) {
+  const groups = calendarDatePattern.exec(value)?.groups;
+  if (!groups) {
     return null;
   }
-  const [year, month, day] = match.slice(1).map(Number) as [
-    number,
-    number,
-    number,
-  ];
+  const year = Number(groups.year);
+  const month = Number(groups.month);
+  const day = Number(groups.day);
   const date = new Date(year, month - 1, day);
   const real =
     date.getFullYear() === year &&

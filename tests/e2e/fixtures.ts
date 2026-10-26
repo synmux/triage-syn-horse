@@ -49,7 +49,7 @@ export interface LinearHarness {
 
 type Variables = Record<string, unknown>;
 
-const operationPattern = /\b(query|mutation)\s+(\w+)/;
+const operationPattern = /\b(?<kind>query|mutation)\s+(?<operation>\w+)/u;
 /** Scalar inputs copied onto the recorded issue as-is. */
 const copiedFields = ["priority", "estimate", "title", "snoozedUntilAt"];
 
@@ -246,8 +246,8 @@ export const test = base.extend<{ linear: LinearHarness }>({
           query?: string;
           variables?: Variables;
         };
-        const [, kind, operation = "unknown"] =
-          operationPattern.exec(body.query ?? "") ?? [];
+        const { kind, operation = "unknown" } =
+          operationPattern.exec(body.query ?? "")?.groups ?? {};
         const variables = body.variables ?? {};
 
         if (kind === "mutation") {

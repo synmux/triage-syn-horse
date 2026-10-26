@@ -58,7 +58,11 @@
     padding: var(--space-1) var(--gutter-end) var(--space-3) var(--gutter);
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-width: none;
+  }
+  @supports (scrollbar-width: none) {
+    .filters {
+      scrollbar-width: none;
+    }
   }
   .filters::-webkit-scrollbar {
     display: none;

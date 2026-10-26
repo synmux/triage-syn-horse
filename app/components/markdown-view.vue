@@ -47,10 +47,16 @@
   }
   .markdown :deep(code) {
     padding: 0.05em 0.3em;
-    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-family: "SF Mono", Menlo, monospace;
     font-size: 0.88em;
     background: var(--colour-surface-raised);
     border-radius: 0.3em;
+  }
+
+  @supports (font-family: ui-monospace) {
+    .markdown :deep(code) {
+      font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    }
   }
   .markdown :deep(pre) {
     max-width: 100%;

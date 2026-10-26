@@ -150,7 +150,9 @@
         @click="confirm"
       >
         {{
-          chosen ? `Mark as duplicate of ${chosen.identifier}` : "Choose the original issue"
+          chosen
+            ? `Mark as duplicate of ${chosen.identifier}`
+            : "Choose the original issue"
         }}
       </button>
     </template>

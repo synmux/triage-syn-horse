@@ -491,23 +491,43 @@
         :default-state-id="acceptStateId ?? defaultAcceptStateId ?? ''"
         :identifier="issue.identifier"
         :targets="acceptTargets(team, teamStates)"
-        @confirm="(choice) => withIssue((current) => act('accept', () => actions.accept(current, choice)))"
+        @confirm="
+          (choice) =>
+            withIssue((current) =>
+              act('accept', () => actions.accept(current, choice))
+            )
+        "
       />
       <DeclineSheet
         v-model:open="declineOpen"
         :identifier="issue.identifier"
-        @confirm="(comment) => withIssue((current) => act('decline', () => actions.decline(current, { comment })))"
+        @confirm="
+          (comment) =>
+            withIssue((current) =>
+              act('decline', () => actions.decline(current, { comment }))
+            )
+        "
       />
       <DuplicateSheet
         v-model:open="duplicateOpen"
         :identifier="issue.identifier"
         :issue-id="issue.id"
-        @confirm="(canonical) => withIssue((current) => act('duplicate', () => actions.duplicate(current, canonical)))"
+        @confirm="
+          (canonical) =>
+            withIssue((current) =>
+              act('duplicate', () => actions.duplicate(current, canonical))
+            )
+        "
       />
       <SnoozeSheet
         v-model:open="snoozeOpen"
         :identifier="issue.identifier"
-        @confirm="(until) => withIssue((current) => act('snooze', () => actions.snooze(current, until)))"
+        @confirm="
+          (until) =>
+            withIssue((current) =>
+              act('snooze', () => actions.snooze(current, until))
+            )
+        "
       />
       <TextSheet
         label="Comment"

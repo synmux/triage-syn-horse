@@ -9,8 +9,8 @@ import {
 const hashOf = (source: string) =>
   `'sha256-${createHash("sha256").update(source, "utf8").digest("base64")}'`;
 
-const inlineScriptsAllowed = /script-src[^;]*unsafe-inline/;
-const startsWithCatchAll = /^\/\*\n/;
+const inlineScriptsAllowed = /script-src[^;]*unsafe-inline/u;
+const startsWithCatchAll = /^\/\*\n/u;
 const importMap = '{"imports":{"#entry":"/_nuxt/abc.js"}}';
 const bootstrap = "window.__NUXT__={};window.__NUXT__.config={public:{}}";
 

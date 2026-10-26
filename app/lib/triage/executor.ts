@@ -87,7 +87,7 @@ export class UndoFailedError extends Error {
   }
 }
 
-const notFoundPattern = /not found|could not find/i;
+const notFoundPattern = /not found|could not find/iu;
 
 /** Whether Linear says the thing a delete targets no longer exists. */
 function isAlreadyGone(error: unknown): boolean {
@@ -113,7 +113,7 @@ const undoStepDescriptions: Record<UndoStep["kind"], string> = {
   updateIssue: "The change that was already made could not be reverted",
 };
 
-const sentenceEnding = /[.!?]$/;
+const sentenceEnding = /[.!?]$/u;
 
 const asSentence = (text: string) =>
   sentenceEnding.test(text) ? text : `${text}.`;

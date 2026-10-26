@@ -58,7 +58,9 @@
               :title="formatFullDateTime(new Date(entry.at))"
             >
               {{
-                relativeAge(new Date(entry.at), queue.now) === "now" ? "just now" : `${relativeAge(new Date(entry.at), queue.now)} ago`
+                relativeAge(new Date(entry.at), queue.now) === "now"
+                  ? "just now"
+                  : `${relativeAge(new Date(entry.at), queue.now)} ago`
               }}
             </time>
             <p class="message" v-if="entry.message">{{ entry.message }}</p>

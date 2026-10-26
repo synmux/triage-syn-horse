@@ -114,7 +114,10 @@
     <div
       aria-hidden="true"
       class="pull"
-      :class="{ ready: pull.progress.value >= 1, refreshing: pull.refreshing.value }"
+      :class="{
+        ready: pull.progress.value >= 1,
+        refreshing: pull.refreshing.value,
+      }"
       :style="{ height: `${pull.distance.value}px` }"
     >
       <AppIcon name="refresh" :size="20" />
@@ -159,7 +162,11 @@
       <TransitionGroup class="list" name="row" tag="ul" v-else>
         <li v-for="issue in queue.visible" :key="issue.id">
           <SwipeRow
-            :disabled="!preferences.values.swipeEnabled || showSnoozed || queue.pending.has(issue.id)"
+            :disabled="
+              !preferences.values.swipeEnabled ||
+              showSnoozed ||
+              queue.pending.has(issue.id)
+            "
             :left-action="leftAction"
             :right-action="{ label: 'Accept', tone: 'accept' }"
             @commit="(direction) => onSwipe(issue, direction)"

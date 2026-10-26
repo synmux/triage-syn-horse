@@ -62,9 +62,13 @@
     padding-top: env(safe-area-inset-top);
     background: color-mix(in srgb, var(--colour-canvas) 84%, transparent);
     border-bottom: 1px solid transparent;
-    -webkit-backdrop-filter: saturate(180%) blur(18px);
-    backdrop-filter: saturate(180%) blur(18px);
     transition: border-color var(--duration-standard) var(--ease-out);
+  }
+  @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
+    .nav {
+      -webkit-backdrop-filter: saturate(180%) blur(18px);
+      backdrop-filter: saturate(180%) blur(18px);
+    }
   }
   .nav.compact {
     border-bottom-color: var(--colour-line);

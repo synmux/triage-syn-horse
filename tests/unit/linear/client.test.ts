@@ -11,7 +11,7 @@ import {
 import { ViewerDocument } from "~/lib/linear/generated/graphql";
 
 const apiKey = "lin_api_unit_test_key_0123456789";
-const tookTooLong = /too long/;
+const tookTooLong = /too long/u;
 
 const jsonResponse = (
   body: unknown,

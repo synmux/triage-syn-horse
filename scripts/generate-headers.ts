@@ -11,9 +11,10 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const scriptPattern = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
-const typePattern = /\btype\s*=\s*["']?([^"'\s>]+)/i;
-const srcPattern = /\bsrc\s*=/i;
+const scriptPattern =
+  /<script\b(?<attributes>[^>]*)>(?<body>[\s\S]*?)<\/script>/giu;
+const typePattern = /\btype\s*=\s*["']?(?<type>[^"'\s>]+)/iu;
+const srcPattern = /\bsrc\s*=/iu;
 
 /** Script types the browser executes (or, for import maps, obeys) inline. */
 const executableTypes = new Set([
@@ -30,8 +31,12 @@ const sha256 = (source: string) =>
 /** CSP hashes for every executable inline script in an HTML document. */
 export function inlineScriptHashes(html: string): string[] {
   const hashes: string[] = [];
-  for (const [, attributes = "", body = ""] of html.matchAll(scriptPattern)) {
-    const type = (typePattern.exec(attributes)?.[1] ?? "").toLowerCase();
+  for (const { groups } of html.matchAll(scriptPattern)) {
+    const attributes = groups?.attributes ?? "";
+    const body = groups?.body ?? "";
+    const type = (
+      typePattern.exec(attributes)?.groups?.type ?? ""
+    ).toLowerCase();
     if (srcPattern.test(attributes) || !executableTypes.has(type)) {
       continue;
     }

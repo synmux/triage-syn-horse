@@ -321,7 +321,9 @@
       <button
         class="chip"
         type="button"
-        :aria-description="missing.includes('priority') ? 'Needed before accepting' : undefined"
+        :aria-description="
+          missing.includes('priority') ? 'Needed before accepting' : undefined
+        "
         :class="{ needed: missing.includes('priority') }"
         @click="openPicker = 'priority'"
       >
@@ -332,7 +334,9 @@
         class="chip"
         type="button"
         v-if="estimationEnabled(team)"
-        :aria-description="missing.includes('estimate') ? 'Needed before accepting' : undefined"
+        :aria-description="
+          missing.includes('estimate') ? 'Needed before accepting' : undefined
+        "
         :class="{ needed: missing.includes('estimate') }"
         @click="openPicker = 'estimate'"
       >
@@ -368,7 +372,9 @@
             :style="{ background: label.color }"
           />
           {{
-            selectedLabels.length === 1 ? selectedLabels[0]?.name : `${selectedLabels.length} labels`
+            selectedLabels.length === 1
+              ? selectedLabels[0]?.name
+              : `${selectedLabels.length} labels`
           }}
         </template>
       </button>
@@ -473,7 +479,11 @@
     margin: 0 calc(-1 * var(--gutter-end)) 0 calc(-1 * var(--gutter));
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    scrollbar-width: none;
+  }
+  @supports (scrollbar-width: none) {
+    .property-bar {
+      scrollbar-width: none;
+    }
   }
   .property-bar::-webkit-scrollbar {
     display: none;

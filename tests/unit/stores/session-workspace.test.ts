@@ -25,7 +25,7 @@ const viewerData = {
   },
 };
 
-const noStubPattern = /No stub for/;
+const noStubPattern = /No stub for/u;
 const workspace = makeWorkspace();
 const workspaceHandlers = {
   IssueLabels: () => ({ issueLabels: connection(workspace.labels) }),

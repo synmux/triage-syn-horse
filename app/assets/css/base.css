@@ -14,8 +14,13 @@ html {
   color: var(--colour-ink);
   background: var(--colour-canvas);
   -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+}
+
+@supports (text-size-adjust: 100%) {
+  html {
+    text-size-adjust: 100%;
+  }
 }
 
 /* iOS Dynamic Type: the base size follows the reader's text size setting. */

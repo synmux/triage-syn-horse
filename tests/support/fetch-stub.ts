@@ -15,7 +15,7 @@ export interface StubbedRequest {
 // `never` lets each test type its handler's variables precisely.
 type Handler = (variables: never) => unknown;
 
-const operationNamePattern = /\b(?:query|mutation)\s+(\w+)/;
+const operationNamePattern = /\b(?:query|mutation)\s+(?<operationName>\w+)/u;
 
 export function stubLinearFetch(handlers: Record<string, Handler>) {
   const requests: StubbedRequest[] = [];
@@ -24,7 +24,8 @@ export function stubLinearFetch(handlers: Record<string, Handler>) {
       query: string;
       variables: Record<string, unknown>;
     };
-    const operation = operationNamePattern.exec(body.query)?.[1] ?? "unknown";
+    const operation =
+      operationNamePattern.exec(body.query)?.groups?.operationName ?? "unknown";
     requests.push({
       headers: new Headers(init?.headers),
       operation,

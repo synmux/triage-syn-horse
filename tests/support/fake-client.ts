@@ -13,16 +13,16 @@ export interface RecordedCall {
 
 type Handler = (variables: never) => unknown;
 
-const operationNamePattern = /\b(?:query|mutation)\s+(\w+)/;
+const operationNamePattern = /\b(?:query|mutation)\s+(?<name>\w+)/u;
 
 export function operationName(document: { toString: () => string }): string {
-  const match = operationNamePattern.exec(document.toString());
-  if (!match?.[1]) {
+  const name = operationNamePattern.exec(document.toString())?.groups?.name;
+  if (!name) {
     throw new Error(
       "Fake client received a document without an operation name"
     );
   }
-  return match[1];
+  return name;
 }
 
 export function createFakeClient(handlers: Record<string, Handler>) {
