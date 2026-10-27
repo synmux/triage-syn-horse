@@ -20,6 +20,11 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 100
+    ignore:
+      # vue-tsc (via `nuxt typecheck`) loads typescript/lib/tsc, which TypeScript 7 no longer exports
+      # (ERR_PACKAGE_PATH_NOT_EXPORTED). Drop this rule once vue-tsc supports TypeScript 7.
+      - dependency-name: typescript
+        versions: [ ">=6.1.0" ]
     assignees:
       - synmux
     groups:
