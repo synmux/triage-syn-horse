@@ -4,7 +4,7 @@ V0_API_KEY = ''
 TMPDIR = '/tmp'
 
 [tools]
-node = { version = '26.12.0' }
+node = "26.12.1"
 
 [tasks]
 claude = 'npx --yes @anthropic-ai/claude-code@latest'
