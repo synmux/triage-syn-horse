@@ -35,7 +35,7 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.3",
+    "@biomejs/biome": "^2.6.4",
     "@graphql-codegen/cli": "^7.4.6",
     "@graphql-codegen/client-preset": "^6.2.3",
     "@graphql-typed-document-node/core": "^3.2.0",
@@ -43,7 +43,7 @@
     "@playwright/test": "^1.64.1",
     "@types/jsdom": "^30.0.0",
     "@types/markdown-it": "^14.2.0",
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@vite-pwa/assets-generator": "^2.0.0",
     "@vite-pwa/nuxt": "^1.1.1",
     "@vitejs/plugin-vue": "^6.0.10",
@@ -55,8 +55,8 @@
     "ultracite": "^8.1.0",
     "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.0.5",
-    "vue-tsc": "^3.3.13",
-    "wrangler": "^4.154.0"
+    "vue-tsc": "^3.3.14",
+    "wrangler": "^4.156.0"
   },
   "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45",
   "engines": {
