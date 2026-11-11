@@ -29,13 +29,13 @@
     "@pinia/nuxt": "^1.0.3",
     "dompurify": "^3.4.17",
     "markdown-it": "^15.0.3",
-    "nuxt": "^4.6.3",
+    "nuxt": "^4.6.4",
     "pinia": "^4.1.0",
     "vue": "^3.5.44",
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.4",
+    "@biomejs/biome": "^2.6.5",
     "@graphql-codegen/cli": "^7.4.6",
     "@graphql-codegen/client-preset": "^6.2.3",
     "@graphql-typed-document-node/core": "^3.2.0",
@@ -54,9 +54,9 @@
     "typescript": "~6.0.3",
     "ultracite": "^8.1.1",
     "vite-plugin-pwa": "^2.0.0",
-    "vitest": "^5.0.5",
+    "vitest": "^5.1.0",
     "vue-tsc": "^3.3.14",
-    "wrangler": "^4.156.1"
+    "wrangler": "^4.157.0"
   },
   "packageManager": "pnpm@12.8.1+sha512.f64ba907507f5ceafe06c8d38e6052d0179444580ec1279ddd5bfc11cb48aa8a2644b66598e07e761da84872a9fc57d5f902b87fa49d024198d558612aabbe45",
   "engines": {
