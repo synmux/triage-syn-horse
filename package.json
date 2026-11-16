@@ -35,11 +35,11 @@
     "vue-router": "^5.4.0"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.5",
-    "@graphql-codegen/cli": "^7.4.6",
-    "@graphql-codegen/client-preset": "^6.2.3",
+    "@biomejs/biome": "^2.6.6",
+    "@graphql-codegen/cli": "^8.0.0",
+    "@graphql-codegen/client-preset": "^7.0.0",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@nuxt/test-utils": "^4.3.4",
+    "@nuxt/test-utils": "^4.4.0",
     "@playwright/test": "^1.65.0",
     "@types/jsdom": "^30.0.0",
     "@types/markdown-it": "^14.2.0",
